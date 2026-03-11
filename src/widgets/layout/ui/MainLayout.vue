@@ -1,0 +1,39 @@
+<script setup lang="ts">
+import Sidebar from '@/widgets/sidebar/ui/Sidebar.vue';
+import Header from '@/widgets/header/ui/Header.vue';
+</script>
+
+<template>
+  <div class="layout">
+    <Sidebar />
+
+    <div class="main">
+      <Header />
+
+      <main class="content">
+        <router-view />
+      </main>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f3f4f6;
+  font: 'Montserrat';
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+</style>
