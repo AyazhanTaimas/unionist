@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { openCheckout } from './financeApi'
+import { computed, onMounted, ref } from 'vue'
+import { getFinanceCharges, openCheckout, type FinanceCharge } from './financeApi'
 
 type ChargeType = 'housing' | 'penalty'
 type ChargeStatus = 'paid' | 'unpaid'
@@ -18,57 +18,55 @@ interface Charge {
 
 const activeTab = ref<ChargeType>('housing')
 const loadingId = ref<number | null>(null)
+const loading = ref(false)
+const error = ref<string | null>(null)
 
-/**
- * ВРЕМЕННЫЕ ДАННЫЕ
- * Потом заменишь на данные с backend:
- * например GET /api/v1/finance/charges
- */
-const charges = ref<Charge[]>([
-  {
-    id: 101,
-    title: 'Весна 2026',
-    amount: 300000,
-    due_date: '31.12.2025',
-    status: 'unpaid',
-    type: 'housing',
-  },
-  {
-    id: 102,
-    title: 'Осень 2025',
-    amount: 300000,
-    paid_at: '20.09.2025',
-    status: 'paid',
-    type: 'housing',
-  },
-  {
-    id: 201,
-    title: 'Штраф за просрочку возврата книг',
-    description: 'Библиотека',
-    amount: 5000,
-    due_date: '13.01.2026',
-    status: 'unpaid',
-    type: 'penalty',
-  },
-  {
-    id: 202,
-    title: 'Штраф за порчу имущества',
-    description: 'Общежитие',
-    amount: 15000,
-    due_date: '10.01.2026',
-    status: 'unpaid',
-    type: 'penalty',
-  },
-  {
-    id: 203,
-    title: 'Штраф за утерю билета',
-    description: 'Общежитие',
-    amount: 3000,
-    paid_at: '01.01.2026',
-    status: 'paid',
-    type: 'penalty',
-  },
-])
+const charges = ref<Charge[]>([])
+
+function formatDate(value?: string | null) {
+  if (!value) return undefined
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleDateString('ru-RU')
+}
+
+function normalizeType(type: string): ChargeType {
+  return type.includes('penalty') ? 'penalty' : 'housing'
+}
+
+function normalizeStatus(status: string): ChargeStatus {
+  return status === 'paid' || status === 'succeeded' ? 'paid' : 'unpaid'
+}
+
+function mapCharge(item: FinanceCharge): Charge {
+  const type = normalizeType(item.type)
+  const dueDate = formatDate(item.period_end)
+
+  return {
+    id: item.id,
+    title: type === 'housing' ? 'Оплата проживания' : 'Штраф',
+    amount: Number(item.amount),
+    due_date: dueDate,
+    status: normalizeStatus(item.status),
+    type,
+  }
+}
+
+async function loadCharges() {
+  loading.value = true
+  error.value = null
+
+  try {
+    const response = await getFinanceCharges()
+    charges.value = response.map(mapCharge)
+  } catch (e) {
+    console.error(e)
+    error.value = 'Не удалось загрузить начисления'
+    charges.value = []
+  } finally {
+    loading.value = false
+  }
+}
 
 const housingCharges = computed(() =>
   charges.value.filter((item) => item.type === 'housing')
@@ -128,8 +126,14 @@ async function handlePayAll() {
    * Когда появится endpoint массовой оплаты,
    * заменишь эту логику на create batch checkout.
    */
-  await handlePay(unpaid[0].id)
+  const firstUnpaid = unpaid[0]
+  if (!firstUnpaid) return
+  await handlePay(firstUnpaid.id)
 }
+
+onMounted(() => {
+  loadCharges()
+})
 </script>
 
 <template>
@@ -185,43 +189,53 @@ async function handlePayAll() {
       </div>
 
       <div class="charges-list">
-        <div
-          v-for="charge in currentCharges"
-          :key="charge.id"
-          class="charge-row"
-          :class="{ paid: charge.status === 'paid' }"
-        >
-          <div class="charge-main">
-            <div class="charge-title">{{ charge.title }}</div>
-            <div v-if="charge.description" class="charge-description">
-              {{ charge.description }}
-            </div>
-            <div v-if="charge.status === 'paid' && charge.paid_at" class="charge-paid">
-              оплачено: {{ charge.paid_at }}
-            </div>
-          </div>
-
-          <div class="charge-meta">
-            <div v-if="charge.due_date" class="charge-date">
-              {{ charge.due_date }}
-            </div>
-
-            <div v-if="charge.status === 'unpaid'" class="charge-amount">
-              {{ formatAmount(charge.amount) }}
-            </div>
-
-            <button
-              v-if="charge.status === 'unpaid'"
-              class="pay-btn small"
-              :disabled="loadingId === charge.id"
-              @click="handlePay(charge.id)"
-            >
-              {{ loadingId === charge.id ? 'Загрузка...' : 'Оплатить' }}
-            </button>
-
-            <div v-else class="paid-label">оплачено</div>
-          </div>
+        <div v-if="loading" class="empty-state">
+          Загрузка начислений...
         </div>
+
+        <div v-else-if="error" class="empty-state">
+          {{ error }}
+        </div>
+
+        <template v-else>
+          <div
+            v-for="charge in currentCharges"
+            :key="charge.id"
+            class="charge-row"
+            :class="{ paid: charge.status === 'paid' }"
+          >
+            <div class="charge-main">
+              <div class="charge-title">{{ charge.title }}</div>
+              <div v-if="charge.description" class="charge-description">
+                {{ charge.description }}
+              </div>
+              <div v-if="charge.status === 'paid' && charge.paid_at" class="charge-paid">
+                оплачено: {{ charge.paid_at }}
+              </div>
+            </div>
+
+            <div class="charge-meta">
+              <div v-if="charge.due_date" class="charge-date">
+                {{ charge.due_date }}
+              </div>
+
+              <div v-if="charge.status === 'unpaid'" class="charge-amount">
+                {{ formatAmount(charge.amount) }}
+              </div>
+
+              <button
+                v-if="charge.status === 'unpaid'"
+                class="pay-btn small"
+                :disabled="loadingId === charge.id"
+                @click="handlePay(charge.id)"
+              >
+                {{ loadingId === charge.id ? 'Загрузка...' : 'Оплатить' }}
+              </button>
+
+              <div v-else class="paid-label">оплачено</div>
+            </div>
+          </div>
+        </template>
 
         <div v-if="!currentCharges.length" class="empty-state">
           Начислений пока нет
