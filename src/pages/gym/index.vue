@@ -265,16 +265,18 @@ onMounted(() => {
 .gym-card-wrapper {
   position: relative;
   width: 100%;
+  margin-top: 40px;
 }
 
 .accent-line {
   position: absolute;
-  left: 0;
+  left: 19px;
   top: 18px;
   bottom: 18px;
   width: 4px;
   border-radius: 10px;
   background: #4d46ff;
+
 }
 
 .gym-card {
