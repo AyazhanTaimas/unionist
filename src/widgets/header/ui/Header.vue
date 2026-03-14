@@ -36,7 +36,7 @@ async function logout() {
       </button>
 
       <button class="logout-btn" @click="logout">
-        Выйти
+        <img src="@/assets/logout.svg"/>
       </button>
     </div>
   </header>
@@ -87,19 +87,28 @@ async function logout() {
 }
 
 .logout-btn {
-  height: 36px;
-  padding: 0 14px;
+  height: 20px;
+  padding: 4px;
   border-radius: 10px;
   border: none;
   background: #eef2ff;
-  color: #4f46e5;
-  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  color:#4f46e5
+}
+
+.logout-btn img {
+  width: 22px;
+  height: 22px;
+  color:#4f46e5
 }
 
 .logout-btn:hover {
-  background: #e0e7ff;
+  color: #e0e7ff;
 }
 
 </style>

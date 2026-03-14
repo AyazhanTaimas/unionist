@@ -322,11 +322,12 @@ onMounted(() => {
 .penalty-card-wrapper {
   position: relative;
   width: 100%;
+  margin-top: -50px;
 }
 
 .accent-line {
   position: absolute;
-  left: 20px;
+  left: 18px;
   top: 18px;
   bottom: 18px;
   width: 4px;

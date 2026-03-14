@@ -213,6 +213,7 @@ onMounted(() => {
 <template>
   <section class="finance-page">
     <div class="finance-card">
+        <div class="accent-line"></div>
       <div class="finance-summary">
         <div>
           <div class="finance-summary__title">{{ summaryTitle }}</div>
@@ -308,7 +309,7 @@ onMounted(() => {
 <style scoped>
 .finance-page {
   padding: 24px;
-  margin-top: 80px;
+  margin-top: 50px;
   height: 100%;
 }
 
@@ -318,6 +319,18 @@ onMounted(() => {
   border-radius: 24px;
   padding: 18px;
   box-shadow: 0 4px 16px rgba(31, 41, 55, 0.06);
+  position: relative;
+}
+
+.accent-line {
+  position: absolute;
+  left: 0px;
+  top: 18px;
+  bottom: 18px;
+  width: 4px;
+  border-radius: 10px;
+  background: #4d46ff;
+
 }
 
 .finance-summary {
