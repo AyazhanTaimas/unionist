@@ -4,18 +4,26 @@
       <div class="icon">⚠️</div>
       <h1>Оплата отменена</h1>
       <p>Платеж не был завершен. Вы можете попробовать снова.</p>
-      <button @click="goFinance">Вернуться к оплате</button>
+      <button @click="goPrimary">{{ primaryButtonText }}</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 
-function goFinance() {
-  router.push('/finance')
+const isGymPayment = computed(() => route.query.source === 'gym')
+const primaryButtonText = computed(() =>
+  isGymPayment.value ? 'Вернуться в тренажерный зал' : 'Вернуться к оплате'
+)
+
+function goPrimary() {
+  router.push(isGymPayment.value ? '/gym' : '/finance')
 }
 </script>
 
