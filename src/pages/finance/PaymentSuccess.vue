@@ -1,56 +1,46 @@
 <template>
   <div class="success-page">
     <div class="card">
-
       <div class="icon-wrapper">
         <svg viewBox="0 0 24 24" class="check-icon">
           <path
-              d="M20 6L9 17L4 12"
-              fill="none"
-              stroke="white"
-              stroke-width="3"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+            d="M20 6L9 17L4 12"
+            fill="none"
+            stroke="white"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           />
         </svg>
       </div>
 
-      <h1>Оплата прошла успешно 🎉</h1>
+      <h1>Оплата прошла успешно</h1>
 
       <p class="description">
         Ваш платеж был успешно обработан. <br />
-        Спасибо за оплату!
+        Спасибо за оплату.
       </p>
 
       <div class="buttons">
-        <button class="primary" @click="goPrimary">
-          {{ primaryButtonText }}
+        <button class="primary" @click="goFinance">
+          Перейти к оплатам
         </button>
 
         <button class="secondary" @click="goHome">
           На главную
         </button>
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useRoute } from 'vue-router'
 
 const router = useRouter()
-const route = useRoute()
 
-const isGymPayment = computed(() => route.query.source === 'gym')
-const primaryButtonText = computed(() =>
-  isGymPayment.value ? 'Перейти в тренажерный зал' : 'Перейти к оплатам'
-)
-
-function goPrimary() {
-  router.push(isGymPayment.value ? '/gym' : '/finance')
+function goFinance() {
+  router.push('/finance')
 }
 
 function goHome() {
@@ -59,30 +49,25 @@ function goHome() {
 </script>
 
 <style scoped>
-
 .success-page {
   position: fixed;
   inset: 0;
-
   display: flex;
   justify-content: center;
   align-items: center;
-
   background: radial-gradient(circle at 30% 30%, #5b7cff, #3f51ff, #2c3eea);
   font-family: 'Montserrat', sans-serif;
 }
 
 .card {
+  width: min(100%, 420px);
   background: white;
   padding: 48px 40px;
   border-radius: 20px;
   text-align: center;
-  width: 420px;
-
   box-shadow:
-      0 25px 60px rgba(0,0,0,0.15),
-      0 8px 20px rgba(0,0,0,0.08);
-
+    0 25px 60px rgba(0, 0, 0, 0.15),
+    0 8px 20px rgba(0, 0, 0, 0.08);
   animation: fadeUp 0.6s ease;
 }
 
@@ -91,23 +76,19 @@ function goHome() {
   height: 130px;
   margin: 0 auto 20px;
   border-radius: 50%;
-
   display: flex;
   justify-content: center;
   align-items: center;
-
   background: #22c55e;
-
   box-shadow:
-      0 0 0 10px rgba(34,197,94,0.15),
-      0 15px 30px rgba(34,197,94,0.35);
-
+    0 0 0 10px rgba(34, 197, 94, 0.15),
+    0 15px 30px rgba(34, 197, 94, 0.35);
   animation: pop 0.5s ease;
 }
 
 .check-icon {
-  width: 40px;
-  height: 40px;
+  width: 70px;
+  height: 70px;
 }
 
 h1 {
@@ -130,32 +111,32 @@ h1 {
 }
 
 button {
-  padding: 14px;
-  border-radius: 10px;
+  padding: 14px 18px;
+  border-radius: 14px;
   border: none;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-family: inherit;
 }
 
 .primary {
-  background: linear-gradient(135deg,#3b82f6,#2563eb);
+  background: linear-gradient(135deg, #2f3dff, #4669ff);
   color: white;
 }
 
 .primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(37,99,235,0.3);
 }
 
 .secondary {
-  background: #f3f4f6;
-  color: #374151;
+  background: #eef2ff;
+  color: #34446d;
 }
 
 .secondary:hover {
-  background: #e5e7eb;
+  background: #e2e8ff;
 }
 
 @keyframes fadeUp {
@@ -182,41 +163,10 @@ button {
     opacity: 1;
   }
 }
-.check-icon {
-  width: 70px;
-  height: 70px;
-}
 
-.check-circle {
-  stroke: #22c55e;
-  stroke-width: 3;
-  stroke-dasharray: 166;
-  stroke-dashoffset: 166;
-  animation: circle 0.6s ease forwards;
-}
-
-.check-path {
-  stroke: #22c55e;
-  stroke-width: 4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-
-  stroke-dasharray: 48;
-  stroke-dashoffset: 48;
-
-  animation: check 0.4s 0.6s ease forwards;
-}
-
-@keyframes circle {
-  to {
-    stroke-dashoffset: 0;
+@media (max-width: 720px) {
+  .card {
+    padding: 36px 24px;
   }
 }
-
-@keyframes check {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
 </style>

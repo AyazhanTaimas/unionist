@@ -2,21 +2,23 @@
 import { computed, onMounted, ref } from 'vue'
 import { getFinanceCharges, openCheckout, type FinanceCharge } from './financeApi'
 
-type ChargeType = 'housing' | 'penalty'
+type ChargeTab = 'payments' | 'penalty'
+type ChargeKind = 'housing' | 'penalty' | 'gym' | 'other'
 type ChargeStatus = 'paid' | 'unpaid'
 
 interface Charge {
   id: number
   title: string
-  description?: string
+  subtitle?: string
   amount: number
   due_date?: string
   paid_at?: string | null
   status: ChargeStatus
-  type: ChargeType
+  kind: ChargeKind
+  raw_type: string
 }
 
-const activeTab = ref<ChargeType>('housing')
+const activeTab = ref<ChargeTab>('payments')
 const loadingId = ref<number | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -30,25 +32,61 @@ function formatDate(value?: string | null) {
   return date.toLocaleDateString('ru-RU')
 }
 
-function normalizeType(type: string): ChargeType {
-  return type.includes('penalty') ? 'penalty' : 'housing'
+function normalizeKind(type: string): ChargeKind {
+  const normalized = type.toLowerCase()
+
+  if (normalized.includes('penalty')) return 'penalty'
+  if (normalized.includes('gym')) return 'gym'
+  if (normalized.includes('rent') || normalized.includes('settlement') || normalized.includes('housing')) {
+    return 'housing'
+  }
+
+  return 'other'
 }
 
 function normalizeStatus(status: string): ChargeStatus {
   return status === 'paid' || status === 'succeeded' ? 'paid' : 'unpaid'
 }
 
+function getChargePresentation(kind: ChargeKind, rawType: string) {
+  switch (kind) {
+    case 'housing':
+      return {
+        title: 'Оплата проживания',
+        subtitle: 'Начисление за проживание в общежитии',
+      }
+    case 'gym':
+      return {
+        title: 'Оплата абонемента в зал',
+        subtitle: 'Тренажерный зал',
+      }
+    case 'penalty':
+      return {
+        title: 'Штраф',
+        subtitle: 'Дисциплинарное начисление',
+      }
+    default:
+      return {
+        title: 'Другая оплата',
+        subtitle: rawType.replaceAll('_', ' '),
+      }
+  }
+}
+
 function mapCharge(item: FinanceCharge): Charge {
-  const type = normalizeType(item.type)
+  const kind = normalizeKind(item.type)
   const dueDate = formatDate(item.period_end)
+  const presentation = getChargePresentation(kind, item.type)
 
   return {
     id: item.id,
-    title: type === 'housing' ? 'Оплата проживания' : 'Штраф',
+    title: presentation.title,
+    subtitle: presentation.subtitle,
     amount: Number(item.amount),
     due_date: dueDate,
     status: normalizeStatus(item.status),
-    type,
+    kind,
+    raw_type: item.type,
   }
 }
 
@@ -68,16 +106,16 @@ async function loadCharges() {
   }
 }
 
-const housingCharges = computed(() =>
-  charges.value.filter((item) => item.type === 'housing')
+const paymentCharges = computed(() =>
+  charges.value.filter((item) => item.kind !== 'penalty')
 )
 
 const penaltyCharges = computed(() =>
-  charges.value.filter((item) => item.type === 'penalty')
+  charges.value.filter((item) => item.kind === 'penalty')
 )
 
 const currentCharges = computed(() =>
-  activeTab.value === 'housing' ? housingCharges.value : penaltyCharges.value
+  activeTab.value === 'payments' ? paymentCharges.value : penaltyCharges.value
 )
 
 const currentTotal = computed(() =>
@@ -85,6 +123,42 @@ const currentTotal = computed(() =>
     .filter((item) => item.status === 'unpaid')
     .reduce((sum, item) => sum + item.amount, 0)
 )
+
+const summaryTitle = computed(() => {
+  if (activeTab.value === 'penalty') {
+    return `Общая сумма штрафов: ${formatAmount(currentTotal.value)}`
+  }
+
+  return `Общая сумма оплат: ${formatAmount(currentTotal.value)}`
+})
+
+const summarySubtitle = computed(() => {
+  if (activeTab.value === 'penalty') {
+    return 'Проверьте неоплаченные штрафы'
+  }
+
+  const unpaidKinds = Array.from(
+    new Set(
+      currentCharges.value
+        .filter((item) => item.status === 'unpaid')
+        .map((item) => item.kind)
+    )
+  )
+
+  if (!unpaidKinds.length) {
+    return 'Все текущие оплаты закрыты'
+  }
+
+  if (unpaidKinds.length === 1 && unpaidKinds[0] === 'gym') {
+    return 'Доступна неоплаченная покупка абонемента в зал'
+  }
+
+  if (unpaidKinds.length === 1 && unpaidKinds[0] === 'housing') {
+    return 'Есть неоплаченные начисления за проживание'
+  }
+
+  return 'Есть несколько типов неоплаченных начислений'
+})
 
 function formatAmount(value: number) {
   return new Intl.NumberFormat('ru-RU').format(value) + ' ₸'
@@ -142,23 +216,8 @@ onMounted(() => {
         <div class="accent-line"></div>
       <div class="finance-summary">
         <div>
-          <div class="finance-summary__title">
-            <template v-if="activeTab === 'housing'">
-              Оплата: {{ formatAmount(currentTotal) }} / семестр
-            </template>
-            <template v-else>
-              Общая сумма штрафов: {{ formatAmount(currentTotal) }}
-            </template>
-          </div>
-
-          <div class="finance-summary__subtitle">
-            <template v-if="activeTab === 'housing'">
-              оплачено до: 31.12.2025
-            </template>
-            <template v-else>
-              проверьте неоплаченные штрафы
-            </template>
-          </div>
+          <div class="finance-summary__title">{{ summaryTitle }}</div>
+          <div class="finance-summary__subtitle">{{ summarySubtitle }}</div>
         </div>
 
         <button
@@ -166,18 +225,17 @@ onMounted(() => {
           :disabled="currentTotal === 0"
           @click="handlePayAll"
         >
-          <template v-if="activeTab === 'housing'">Оплатить</template>
-          <template v-else>Оплатить все</template>
+          {{ activeTab === 'penalty' ? 'Оплатить все' : 'Оплатить' }}
         </button>
       </div>
 
       <div class="tabs">
         <button
           class="tab-btn"
-          :class="{ active: activeTab === 'housing' }"
-          @click="activeTab = 'housing'"
+          :class="{ active: activeTab === 'payments' }"
+          @click="activeTab = 'payments'"
         >
-          Проживание
+          Оплаты
         </button>
 
         <button
@@ -207,8 +265,8 @@ onMounted(() => {
           >
             <div class="charge-main">
               <div class="charge-title">{{ charge.title }}</div>
-              <div v-if="charge.description" class="charge-description">
-                {{ charge.description }}
+              <div v-if="charge.subtitle" class="charge-description">
+                {{ charge.subtitle }}
               </div>
               <div v-if="charge.status === 'paid' && charge.paid_at" class="charge-paid">
                 оплачено: {{ charge.paid_at }}
@@ -216,12 +274,14 @@ onMounted(() => {
             </div>
 
             <div class="charge-meta">
-              <div v-if="charge.due_date" class="charge-date">
-                {{ charge.due_date }}
-              </div>
+              <div class="charge-topline">
+                <div v-if="charge.due_date" class="charge-date">
+                  {{ charge.due_date }}
+                </div>
 
-              <div v-if="charge.status === 'unpaid'" class="charge-amount">
-                {{ formatAmount(charge.amount) }}
+                <div class="charge-amount">
+                  {{ formatAmount(charge.amount) }}
+                </div>
               </div>
 
               <button
@@ -331,95 +391,81 @@ onMounted(() => {
   right: 0;
   bottom: -1px;
   height: 2px;
-  border-radius: 2px;
   background: #4f46e5;
+  border-radius: 999px;
 }
 
 .charges-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-    font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;;
-
+  gap: 16px;
 }
 
 .charge-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
-  min-height: 64px;
-  padding: 14px 18px;
-  border: 1px solid #d9dde7;
+  border: 1px solid #d8dff0;
   border-radius: 999px;
-  background: #fff;
-    font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;;
-
-}
-
-.charge-row.paid {
-  background: #fbfdfb;
+  padding: 22px 32px;
+  background: #ffffff;
 }
 
 .charge-main {
-  display: flex;
-  flex-direction: column;
   min-width: 0;
 }
 
 .charge-title {
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 500;
-  color: #111827;
+  color: #1f2937;
+  font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.charge-description {
-  font-size: 12px;
-  color: #6b7280;
-  margin-top: 2px;
-}
-
+.charge-description,
 .charge-paid {
-  margin-top: 4px;
-  font-size: 12px;
-  color: #2e9f52;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #6b7280;
 }
 
 .charge-meta {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 24px;
   flex-shrink: 0;
 }
 
-.charge-date {
-  font-size: 13px;
-  color: #4b5563;
-  min-width: 78px;
-  text-align: right;
+.charge-topline {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 220px;
+  justify-content: flex-end;
+}
+
+.charge-date,
+.charge-amount {
+  font-size: 16px;
+  color: #64748b;
+  white-space: nowrap;
 }
 
 .charge-amount {
-  font-size: 24px;
-  font-weight: 500;
   color: #111827;
-  min-width: 110px;
-  text-align: right;
+  font-weight: 600;
 }
 
 .pay-btn {
   border: none;
   border-radius: 999px;
-  background: #4f46e5;
+  background: linear-gradient(135deg, #8b86ec, #7d7ae8);
   color: #ffffff;
-  padding: 10px 22px;
-  font-size: 13px;
   cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.pay-btn:hover {
-  opacity: 0.92;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .pay-btn:disabled {
@@ -428,42 +474,40 @@ onMounted(() => {
 }
 
 .pay-btn.small {
-  padding: 8px 18px;
-  min-width: 110px;
+  padding: 10px 24px;
+  font-size: 14px;
 }
 
 .paid-label {
-  font-size: 13px;
-  color: #2e9f52;
-  min-width: 90px;
-  text-align: right;
+  font-size: 16px;
+  color: #44b86d;
+  white-space: nowrap;
 }
 
 .empty-state {
-  padding: 24px 0;
+  padding: 28px;
   text-align: center;
-  color: #6b7280;
+  color: #64748b;
 }
 
 @media (max-width: 900px) {
-  .finance-summary {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .finance-summary__title {
-    font-size: 22px;
-  }
-
   .charge-row {
-    border-radius: 20px;
-    align-items: flex-start;
+    border-radius: 24px;
+    padding: 20px;
     flex-direction: column;
+    align-items: flex-start;
   }
 
   .charge-meta {
     width: 100%;
     justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .charge-topline {
+    min-width: 0;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 }
 </style>
