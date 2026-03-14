@@ -17,6 +17,34 @@ export interface GymMembershipResponse {
     remaining_sessions?: number
     expires_at?: string
     status?: string
+    has_active_visit?: boolean
+    active_visit?: {
+      id: number
+      membership_id: number
+      visit_date?: string
+      check_in_at?: string | null
+      check_out_at?: string | null
+      duration_minutes?: number | null
+      sessions_used?: number
+      status?: string
+    } | null
+  }
+}
+
+export interface GymStatsCalendarEntry {
+  date: string
+  minutes: number
+}
+
+export interface GymStatsResponse {
+  status_code: number
+  message: string
+  data: {
+    total_visits: number
+    total_minutes: number
+    current_streak_weeks: number
+    best_streak_weeks: number
+    calendar: GymStatsCalendarEntry[]
   }
 }
 
@@ -48,7 +76,17 @@ export const createGymCheckout = async (planId: number): Promise<string | null> 
   )
 }
 
-export const useGymSession = async () => {
-  const { data } = await api.post('/gym/use-session')
+export const getGymStats = async (): Promise<GymStatsResponse> => {
+  const { data } = await api.get('/gym/stats')
+  return data
+}
+
+export const checkInGym = async () => {
+  const { data } = await api.post('/gym/check-in')
+  return data
+}
+
+export const checkOutGym = async () => {
+  const { data } = await api.post('/gym/check-out')
   return data
 }

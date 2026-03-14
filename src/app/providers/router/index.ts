@@ -21,6 +21,11 @@ export const router = createRouter({
       component: () => import('@/pages/finance/PaymentSuccess.vue'),
     },
     {
+      path: '/gym/payment-success',
+      name: 'gym-payment-success',
+      component: () => import('@/pages/gym/GymPaymentSuccess.vue'),
+    },
+    {
       path: '/payment-cancel',
       name: 'payment-cancel',
       component: () => import('@/pages/finance/PaymentCancel.vue'),
