@@ -110,7 +110,9 @@ defineEmits<{
         </div>
       </div>
 
-      <slot />
+      <div class="preview-card">
+        <slot />
+      </div>
     </div>
   </div>
 </template>
@@ -155,6 +157,10 @@ defineEmits<{
   background: #f8fafc;
   border-radius: 24px;
   padding: 22px;
+  min-height: 420px;
+}
+
+.preview-card {
   min-height: 420px;
 }
 

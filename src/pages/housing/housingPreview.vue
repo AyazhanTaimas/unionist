@@ -35,7 +35,7 @@ defineProps<{
       />
 
       <img
-        v-else
+        v-else-if="currentView=== 'roommap'"
         key="k4"
         :src="K4"
         alt="Room preview"

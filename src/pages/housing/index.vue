@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import HousingResidenceView from './housingResidence.vue'
 import HousingSelectionForm from './housingSelectionForm.vue'
-import HousingSuccessModal from './housingSuccessModal.vue'
 import HousingEvictModal from './housingEvictModal.vue'
 import HousingPreview from './housingPreview.vue'
 import { useHousingPage } from './model/useHousingPage'
@@ -112,6 +111,7 @@ const {
 .accommodation-page {
   width: 100%;
   min-height: 100%;
+  margin-top: 70px;
 }
 
 .card-wrapper {

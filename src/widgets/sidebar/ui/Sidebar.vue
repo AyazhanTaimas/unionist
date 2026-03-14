@@ -12,6 +12,7 @@ import HeaderLogo from '@/widgets/header/ui/HeaderLogo.vue'
 
     <div class="menu">
       <SidebarItem
+        class="menu_items"
         v-for="item in studentMenu"
         :key="item.route"
         :item="item"
@@ -45,5 +46,10 @@ import HeaderLogo from '@/widgets/header/ui/HeaderLogo.vue'
   background: #f4fefe;
   border-radius: 40px;
   padding: 12px 8px;
+
+}
+
+.menu_items{
+  margin: 10px 0;
 }
 </style>

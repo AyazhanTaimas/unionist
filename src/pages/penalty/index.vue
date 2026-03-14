@@ -316,6 +316,7 @@ onMounted(() => {
 .penalty-page {
   width: 100%;
   min-height: 100%;
+  margin-top:100px;
 }
 
 .penalty-card-wrapper {
@@ -325,12 +326,13 @@ onMounted(() => {
 
 .accent-line {
   position: absolute;
-  left: 0;
+  left: 20px;
   top: 18px;
   bottom: 18px;
   width: 4px;
   border-radius: 10px;
   background: #4d46ff;
+
 }
 
 .penalty-card {
