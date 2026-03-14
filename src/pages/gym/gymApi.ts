@@ -4,7 +4,7 @@ export interface GymPlan {
   id: number
   name: string
   price: number
-  sessions_count: number
+  total_sessions: number
   duration_days?: number
   description?: string | null
 }

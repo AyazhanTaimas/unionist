@@ -23,8 +23,8 @@
       </p>
 
       <div class="buttons">
-        <button class="primary" @click="goFinance">
-          Перейти к оплатам
+        <button class="primary" @click="goPrimary">
+          {{ primaryButtonText }}
         </button>
 
         <button class="secondary" @click="goHome">
@@ -37,12 +37,20 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 
-function goFinance() {
-  router.push('/finance')
+const isGymPayment = computed(() => route.query.source === 'gym')
+const primaryButtonText = computed(() =>
+  isGymPayment.value ? 'Перейти в тренажерный зал' : 'Перейти к оплатам'
+)
+
+function goPrimary() {
+  router.push(isGymPayment.value ? '/gym' : '/finance')
 }
 
 function goHome() {

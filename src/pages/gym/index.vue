@@ -35,8 +35,8 @@ const priceText = computed(() => {
 })
 
 const sessionsText = computed(() => {
-  if (!selectedPlan.value?.sessions_count) return '12 занятий'
-  return `${selectedPlan.value.sessions_count} занятий`
+  if (!selectedPlan.value?.total_sessions) return '12 занятий'
+  return `${selectedPlan.value.total_sessions} занятий`
 })
 
 const formattedExpiresAt = computed(() => {
