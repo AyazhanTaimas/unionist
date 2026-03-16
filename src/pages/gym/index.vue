@@ -121,6 +121,8 @@ const canCheckOut = computed(() =>
   hasActiveVisit.value && !checkOutLoading.value
 )
 
+const isGymLocked = computed(() => !hasMembership.value)
+
 const activeVisitLabel = computed(() => {
   const dateString = activeVisit.value?.check_in_at
   if (!dateString) return 'Тренировка сейчас активна'
@@ -403,7 +405,10 @@ function formatHoursMinutes(minutes: number) {
       <div v-if="loading" class="state-card">Загрузка данных...</div>
 
       <template v-else>
-        <section class="content-grid">
+        <section
+          class="content-grid gym-section"
+          :class="{ 'gym-section--locked': isGymLocked }"
+        >
           <article class="membership-card">
             <div class="section-kicker">Текущий абонемент</div>
 
@@ -447,6 +452,7 @@ function formatHoursMinutes(minutes: number) {
                 :key="plan.id"
                 class="plan-chip"
                 :class="{ 'plan-chip--active': selectedPlan?.id === plan.id }"
+                :disabled="isGymLocked"
                 @click="selectPlan(plan)"
               >
                 {{ plan.name }}
@@ -476,9 +482,16 @@ function formatHoursMinutes(minutes: number) {
               <div class="metric-caption">завершенных тренировок</div>
             </article>
           </div>
+
+          <div v-if="isGymLocked" class="section-lock-banner">
+            Доступ откроется после оформления абонемента
+          </div>
         </section>
 
-        <section class="calendar-card">
+        <section
+          class="calendar-card gym-section"
+          :class="{ 'gym-section--locked': isGymLocked }"
+        >
           <div class="calendar-head">
             <div>
               <div class="section-kicker">Календарь активности</div>
@@ -486,8 +499,20 @@ function formatHoursMinutes(minutes: number) {
             </div>
 
             <div class="calendar-nav">
-              <button class="calendar-nav-btn" @click="goToPreviousMonth">‹</button>
-              <button class="calendar-nav-btn" @click="goToNextMonth">›</button>
+              <button
+                class="calendar-nav-btn"
+                :disabled="isGymLocked"
+                @click="goToPreviousMonth"
+              >
+                ‹
+              </button>
+              <button
+                class="calendar-nav-btn"
+                :disabled="isGymLocked"
+                @click="goToNextMonth"
+              >
+                ›
+              </button>
             </div>
           </div>
 
@@ -515,6 +540,10 @@ function formatHoursMinutes(minutes: number) {
               <span class="calendar-day">{{ cell.dayNumber }}</span>
               <span v-if="cell.minutes" class="calendar-minutes">{{ cell.minutes }}м</span>
             </div>
+          </div>
+
+          <div v-if="isGymLocked" class="section-lock-banner">
+            История посещений станет доступна после покупки абонемента
           </div>
         </section>
       </template>
@@ -655,6 +684,7 @@ button:disabled {
 }
 
 .content-grid {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.85fr);
   gap: 24px;
@@ -807,8 +837,33 @@ button:disabled {
 }
 
 .calendar-card {
+  position: relative;
   border-radius: 30px;
   padding: 24px;
+}
+
+.gym-section--locked {
+  overflow: hidden;
+}
+
+.gym-section--locked > *:not(.section-lock-banner) {
+  filter: grayscale(1);
+  opacity: 0.52;
+  pointer-events: none;
+  user-select: none;
+}
+
+.section-lock-banner {
+  position: absolute;
+  inset: auto 24px 24px 24px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(241, 245, 249, 0.92);
+  color: #475569;
+  text-align: center;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
 }
 
 .calendar-head {
