@@ -15,7 +15,7 @@ export interface LoginResponse {
       id: number
       email: string
       name?: string
-      // добавь другие поля если нужны
+      role?: string
     }
   }
   message: string

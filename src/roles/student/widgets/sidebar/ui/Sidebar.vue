@@ -2,12 +2,12 @@
 import { computed, onMounted, ref } from 'vue'
 import { studentMenu } from '../model/menu'
 import SidebarItem from './SidebarItem.vue'
-import HeaderLogo from '@/widgets/header/ui/HeaderLogo.vue'
+import HeaderLogo from '@/roles/student/widgets/header/ui/HeaderLogo.vue'
 import {
   getCachedDormAccessState,
   getDormAccessState,
   UNAPPROVED_STUDENT_ALLOWED_ROUTES,
-} from '@/shared/lib/dormAccess'
+} from '@/roles/student/shared/lib/dormAccess'
 
 const dormAccessState = ref(getCachedDormAccessState())
 

@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import MainLayout from '@/widgets/layout/ui/MainLayout.vue'
+import MainLayout from '@/roles/student/widgets/layout/ui/MainLayout.vue'
 import LoginPage from '@/pages/login/LoginPage.vue';
 import {
   canUnapprovedStudentAccessPath,
   getDormAccessState,
-} from '@/shared/lib/dormAccess'
+} from '@/roles/student/shared/lib/dormAccess'
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -22,17 +22,17 @@ export const router = createRouter({
     {
       path: '/payment-success',
       name: 'payment-success',
-      component: () => import('@/pages/finance/PaymentSuccess.vue'),
+      component: () => import('@/roles/student/pages/finance/PaymentSuccess.vue'),
     },
     {
       path: '/gym/payment-success',
       name: 'gym-payment-success',
-      component: () => import('@/pages/gym/GymPaymentSuccess.vue'),
+      component: () => import('@/roles/student/pages/gym/GymPaymentSuccess.vue'),
     },
     {
       path: '/payment-cancel',
       name: 'payment-cancel',
-      component: () => import('@/pages/finance/PaymentCancel.vue'),
+      component: () => import('@/roles/student/pages/finance/PaymentCancel.vue'),
     },
 
     {
@@ -42,38 +42,38 @@ export const router = createRouter({
         {
           path: 'news',
           name: 'news',
-          component: () => import('@/pages/news/ui/NewsPage.vue'),
+          component: () => import('@/roles/student/pages/news/ui/NewsPage.vue'),
         },
         {
           path: 'profile',
           name:'profile',
           component: () =>
-            import('@/pages/profile/ui/ProfilePage.vue'),
+            import('@/roles/student/pages/profile/ui/ProfilePage.vue'),
         },
         {
           path: 'housing',
           component: () =>
-            import('@/pages/housing/index.vue')
+            import('@/roles/student/pages/housing/index.vue')
         },
         {
           path: 'myrequest',
           name: 'myrequest',
-          component: () => import('@/pages/myrequest/index.vue'),
+          component: () => import('@/roles/student/pages/myrequest/index.vue'),
         },
         {
           path: 'finance',
           name: 'finance',
-          component: () => import('@/pages/finance/FinancePage.vue'),
+          component: () => import('@/roles/student/pages/finance/FinancePage.vue'),
         },
         {
           path: 'gym',
           name: 'gym',
-          component: () => import('@/pages/gym/index.vue'),
+          component: () => import('@/roles/student/pages/gym/index.vue'),
         },
         {
           path: 'penalty',
           name: 'penalty',
-          component: () => import('@/pages/penalty/index.vue'),
+          component: () => import('@/roles/student/pages/penalty/index.vue'),
         },
       ],
     },
@@ -83,6 +83,10 @@ export const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
+  if (to.path === '/login') {
+    return true
+  }
+
   if (!localStorage.getItem('token')) {
     return true
   }
