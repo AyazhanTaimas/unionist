@@ -4,7 +4,7 @@ import { getFinanceCharges, openCheckout, type FinanceCharge } from './financeAp
 
 type ChargeTab = 'payments' | 'penalty'
 type ChargeKind = 'housing' | 'penalty' | 'gym' | 'other'
-type ChargeStatus = 'paid' | 'unpaid'
+type ChargeStatus = 'paid' | 'unpaid' | 'cancelled'
 
 interface Charge {
   id: number
@@ -45,6 +45,7 @@ function normalizeKind(type: string): ChargeKind {
 }
 
 function normalizeStatus(status: string): ChargeStatus {
+  if (status === 'cancelled') return 'cancelled'
   return status === 'paid' || status === 'succeeded' ? 'paid' : 'unpaid'
 }
 
@@ -96,7 +97,9 @@ async function loadCharges() {
 
   try {
     const response = await getFinanceCharges()
-    charges.value = response.map(mapCharge)
+    charges.value = response
+      .filter((item) => item.status !== 'cancelled')
+      .map(mapCharge)
   } catch (e) {
     console.error(e)
     error.value = 'Не удалось загрузить начисления'

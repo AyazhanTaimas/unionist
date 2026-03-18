@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { login } from './LoginApi'
+import { resetDormAccessState } from '@/shared/lib/dormAccess'
 
 const router = useRouter()
 
@@ -20,6 +21,7 @@ const handleLogin = async () => {
       password: password.value,
     })
 
+    resetDormAccessState()
     localStorage.setItem('token', response.data.token.access_token)
     console.log(response, 'token')
     router.push({ name: 'news' })

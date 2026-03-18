@@ -7,6 +7,17 @@ export interface GymPlan {
   total_sessions: number
   duration_days?: number
   description?: string | null
+  is_active?: boolean
+}
+
+export interface GymMembership {
+  id: number
+  plan?: GymPlan | null
+  total_sessions?: number
+  remaining_sessions?: number
+  started_at?: string
+  expires_at?: string
+  status?: string
 }
 
 export interface GymMembershipResponse {
@@ -14,6 +25,8 @@ export interface GymMembershipResponse {
   message: string
   data: {
     has_membership: boolean
+    membership?: GymMembership | null
+    available_plans?: GymPlan[]
     remaining_sessions?: number
     expires_at?: string
     status?: string

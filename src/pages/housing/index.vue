@@ -27,6 +27,7 @@ const {
   isChangingRoom,
   canSubmit,
   currentView,
+  selectedBuilding,
   hasActiveResidence,
   residenceTitle,
   submitButtonText,
@@ -86,7 +87,10 @@ const {
             @submit="handleSubmit"
             @cancel-change="cancelChangeRoomMode"
           >
-            <HousingPreview :current-view="currentView" />
+            <HousingPreview
+              :current-view="currentView"
+              :selected-building="selectedBuilding"
+            />
           </HousingSelectionForm>
         </template>
       </div>

@@ -3,6 +3,7 @@ import BellIcon from './BellIcon.vue'
 import UserIcon from './UserIcon.vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/api/instance'
+import { resetDormAccessState } from '@/shared/lib/dormAccess'
 
 const router = useRouter();
 
@@ -15,6 +16,7 @@ async function logout() {
     await api.post('/logout')
   } finally {
     localStorage.removeItem('token')
+    resetDormAccessState()
     router.push({ name: 'login' })
   }
 }

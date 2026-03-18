@@ -8,6 +8,7 @@ import {
   getGymMembership,
   getGymPlans,
   getGymStats,
+  type GymMembership,
   type GymPlan,
 } from './gymApi'
 
@@ -29,6 +30,7 @@ const notice = ref<string | null>(null)
 
 const plans = ref<GymPlan[]>([])
 const selectedPlan = ref<GymPlan | null>(null)
+const currentMembership = ref<GymMembership | null>(null)
 
 const hasMembership = ref(false)
 const membershipStatus = ref('')
@@ -44,19 +46,35 @@ const bestStreakWeeks = ref(0)
 const calendarEntries = ref<Array<{ date: string; minutes: number }>>([])
 const displayedMonth = ref(startOfMonth(new Date()))
 
-const priceText = computed(() => {
-  if (!selectedPlan.value?.price) return '10 000 ₸'
-  return `${new Intl.NumberFormat('ru-RU').format(selectedPlan.value.price)} ₸`
-})
+const currentMembershipPlan = computed(() => currentMembership.value?.plan ?? null)
 
-const sessionsText = computed(() => {
-  if (!selectedPlan.value?.total_sessions) return '12 занятий'
+const selectedPlanPriceText = computed(() => formatCurrency(selectedPlan.value?.price))
+
+const selectedPlanSessionsText = computed(() => {
+  if (!selectedPlan.value?.total_sessions) return 'Тариф не выбран'
   return `${selectedPlan.value.total_sessions} занятий`
 })
 
-const durationText = computed(() => {
-  if (!selectedPlan.value?.duration_days) return '30 дней'
+const selectedPlanDurationText = computed(() => {
+  if (!selectedPlan.value?.duration_days) return 'Срок не указан'
   return `${selectedPlan.value.duration_days} дней`
+})
+
+const membershipPriceText = computed(() => {
+  if (!currentMembershipPlan.value?.price) return 'Не оформлен'
+  return formatCurrency(currentMembershipPlan.value.price)
+})
+
+const membershipSessionsText = computed(() => {
+  const totalSessions = currentMembership.value?.total_sessions ?? currentMembershipPlan.value?.total_sessions
+
+  if (!totalSessions) return '—'
+  return `${totalSessions} занятий`
+})
+
+const membershipDurationText = computed(() => {
+  if (!currentMembershipPlan.value?.duration_days) return '—'
+  return `${currentMembershipPlan.value.duration_days} дней`
 })
 
 const membershipTone = computed(() => {
@@ -89,7 +107,14 @@ const membershipLabel = computed(() => {
 
 const checkoutButtonText = computed(() => {
   if (purchaseLoading.value) return 'Переход к оплате...'
-  if (!hasMembership.value) return 'Купить абонемент'
+  if (
+    selectedPlan.value &&
+    (!hasMembership.value ||
+      membershipStatus.value === 'expired' ||
+      membershipStatus.value === 'cancelled')
+  ) {
+    return `Купить ${selectedPlan.value.name}`
+  }
   if (membershipStatus.value === 'expired' || membershipStatus.value === 'cancelled') {
     return 'Оформить новый абонемент'
   }
@@ -205,15 +230,24 @@ async function loadGymPage() {
       getGymStats(),
     ])
 
-    plans.value = plansRes ?? []
+    plans.value = plansRes?.length ? plansRes : membershipRes?.data?.available_plans ?? []
+    const currentPlanId = membershipRes?.data?.membership?.plan?.id
+    const preferredPlanId = selectedPlan.value?.id ?? currentPlanId
+
     selectedPlan.value = selectedPlan.value
       ? plans.value.find((plan) => plan.id === selectedPlan.value?.id) ?? plans.value[0] ?? null
+      : preferredPlanId
+        ? plans.value.find((plan) => plan.id === preferredPlanId) ?? plans.value[0] ?? null
       : plans.value[0] ?? null
 
+    currentMembership.value = membershipRes?.data?.membership ?? null
     hasMembership.value = !!membershipRes?.data?.has_membership
-    membershipStatus.value = membershipRes?.data?.status ?? ''
-    remainingSessions.value = membershipRes?.data?.remaining_sessions ?? 0
-    expiresAt.value = membershipRes?.data?.expires_at ?? ''
+    membershipStatus.value =
+      currentMembership.value?.status ?? membershipRes?.data?.status ?? ''
+    remainingSessions.value =
+      currentMembership.value?.remaining_sessions ?? membershipRes?.data?.remaining_sessions ?? 0
+    expiresAt.value =
+      currentMembership.value?.expires_at ?? membershipRes?.data?.expires_at ?? ''
     hasActiveVisit.value = !!membershipRes?.data?.has_active_visit
     activeVisit.value = membershipRes?.data?.active_visit ?? null
 
@@ -353,6 +387,14 @@ function formatHoursMinutes(minutes: number) {
   if (!hours) return `${leftMinutes} мин`
   return `${hours}ч ${leftMinutes.toString().padStart(2, '0')}м`
 }
+
+function formatCurrency(value?: number | null) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) {
+    return '—'
+  }
+
+  return `${new Intl.NumberFormat('ru-RU').format(Number(value))} ₸`
+}
 </script>
 
 <template>
@@ -366,6 +408,37 @@ function formatHoursMinutes(minutes: number) {
             Управляйте абонементом, отмечайте вход и выход из зала и следите за
             динамикой тренировок в одном месте.
           </p>
+
+          <div v-if="plans.length" class="purchase-plan-card">
+            <div class="purchase-plan-head">
+              <div>
+                <div class="section-kicker">Выбор абонемента</div>
+                <strong class="purchase-plan-name">
+                  {{ selectedPlan?.name || 'Выберите тариф' }}
+                </strong>
+              </div>
+
+              <div class="purchase-plan-price">{{ selectedPlanPriceText }}</div>
+            </div>
+
+            <div class="purchase-plan-meta">
+              <span>{{ selectedPlanDurationText }}</span>
+              <span>{{ selectedPlanSessionsText }}</span>
+            </div>
+
+            <div class="plan-picker plan-picker--purchase">
+              <button
+                v-for="plan in plans"
+                :key="plan.id"
+                class="plan-chip"
+                :class="{ 'plan-chip--active': selectedPlan?.id === plan.id }"
+                :disabled="purchaseLoading"
+                @click="selectPlan(plan)"
+              >
+                {{ plan.name }}
+              </button>
+            </div>
+          </div>
 
           <div class="action-row">
             <button
@@ -415,9 +488,9 @@ function formatHoursMinutes(minutes: number) {
             <div class="membership-head">
               <div>
                 <div :class="membershipTone">{{ membershipLabel }}</div>
-                <h2>{{ selectedPlan?.name || 'Месячный абонемент' }}</h2>
+                <h2>{{ currentMembershipPlan?.name || 'Абонемент не оформлен' }}</h2>
               </div>
-              <div class="membership-price">{{ priceText }}</div>
+              <div class="membership-price">{{ membershipPriceText }}</div>
             </div>
 
             <div class="membership-stats">
@@ -427,11 +500,11 @@ function formatHoursMinutes(minutes: number) {
               </div>
               <div class="stat-box">
                 <span>Длительность</span>
-                <strong>{{ durationText }}</strong>
+                <strong>{{ membershipDurationText }}</strong>
               </div>
               <div class="stat-box">
                 <span>Формат</span>
-                <strong>{{ sessionsText }}</strong>
+                <strong>{{ membershipSessionsText }}</strong>
               </div>
             </div>
 
@@ -444,19 +517,6 @@ function formatHoursMinutes(minutes: number) {
                 <span>Текущий визит</span>
                 <strong>{{ hasActiveVisit ? activeVisitLabel : 'Нет активной тренировки' }}</strong>
               </div>
-            </div>
-
-            <div class="plan-picker">
-              <button
-                v-for="plan in plans"
-                :key="plan.id"
-                class="plan-chip"
-                :class="{ 'plan-chip--active': selectedPlan?.id === plan.id }"
-                :disabled="isGymLocked"
-                @click="selectPlan(plan)"
-              >
-                {{ plan.name }}
-              </button>
             </div>
           </article>
 
@@ -604,6 +664,52 @@ function formatHoursMinutes(minutes: number) {
   max-width: 640px;
   color: #5e6d90;
   line-height: 1.65;
+}
+
+.purchase-plan-card {
+  margin-top: 24px;
+  padding: 18px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(241, 245, 255, 0.98), rgba(232, 238, 255, 0.98));
+  border: 1px solid rgba(168, 179, 226, 0.36);
+}
+
+.purchase-plan-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.purchase-plan-name {
+  display: block;
+  margin-top: 10px;
+  color: #121b38;
+  font-size: 1.15rem;
+}
+
+.purchase-plan-price {
+  color: #2d3cff;
+  font-size: 1.35rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.purchase-plan-meta {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.purchase-plan-meta span {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #4b5b82;
+  font-weight: 600;
 }
 
 .action-row {
@@ -790,6 +896,10 @@ button:disabled {
   flex-wrap: wrap;
 }
 
+.plan-picker--purchase {
+  margin-top: 16px;
+}
+
 .plan-chip {
   padding: 10px 14px;
   border-radius: 999px;
@@ -973,6 +1083,10 @@ button:disabled {
   }
 
   .action-row {
+    flex-direction: column;
+  }
+
+  .purchase-plan-head {
     flex-direction: column;
   }
 
