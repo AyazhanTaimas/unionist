@@ -48,7 +48,9 @@ onMounted(async () => {
 <style scoped lang="scss">
 .sidebar {
   width: 280px;
-  min-height: 100vh;
+  height: 100vh;
+  flex-shrink: 0;
+  overflow: hidden;
 
   padding: 16px 12px;
   background: transparent;
@@ -66,6 +68,8 @@ onMounted(async () => {
 
 
 .menu {
+  flex: 1;
+  overflow: hidden;
   margin-top: 70px;
   background: #f4fefe;
   border-radius: 40px;
