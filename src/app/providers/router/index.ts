@@ -1,6 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainLayout from '@/widgets/layout/ui/MainLayout.vue'
 import LoginPage from '@/pages/login/LoginPage.vue';
+import {
+  canUnapprovedStudentAccessPath,
+  getDormAccessState,
+} from '@/shared/lib/dormAccess'
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -52,6 +56,11 @@ export const router = createRouter({
             import('@/pages/housing/index.vue')
         },
         {
+          path: 'myrequest',
+          name: 'myrequest',
+          component: () => import('@/pages/myrequest/index.vue'),
+        },
+        {
           path: 'finance',
           name: 'finance',
           component: () => import('@/pages/finance/FinancePage.vue'),
@@ -71,4 +80,22 @@ export const router = createRouter({
 
 
   ],
+})
+
+router.beforeEach(async (to) => {
+  if (!localStorage.getItem('token')) {
+    return true
+  }
+
+  const dormAccessState = await getDormAccessState()
+
+  if (!dormAccessState.isStudent || dormAccessState.isApproved) {
+    return true
+  }
+
+  if (canUnapprovedStudentAccessPath(to.path)) {
+    return true
+  }
+
+  return { path: '/news' }
 })

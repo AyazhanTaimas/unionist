@@ -20,7 +20,11 @@ export interface SettlementStatusResponse {
           floor_number: number
           building?: {
             id: number
+            name?: string | null
             address: string
+            latitude?: number | null
+            longitude?: number | null
+            total_floors?: number
           }
         }
       }

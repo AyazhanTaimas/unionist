@@ -1,31 +1,66 @@
 <script setup lang="ts">
-import K2 from '@/assets/K2.png'
+import { computed } from 'vue'
 import K3 from '@/assets/K3.png'
 import K4 from '@/assets/K4.png'
-import type { View } from './model/types'
+import type { Building, View } from './model/types'
 
-defineProps<{
+const props = defineProps<{
   currentView: View
+  selectedBuilding: Building | null
 }>()
+
+const DEFAULT_LATITUDE = 43.238949
+const DEFAULT_LONGITUDE = 76.889709
+
+const mapCoordinates = computed(() => {
+  const latitude = Number(props.selectedBuilding?.latitude)
+  const longitude = Number(props.selectedBuilding?.longitude)
+
+  const hasValidLatitude = Number.isFinite(latitude) && latitude >= -90 && latitude <= 90
+  const hasValidLongitude = Number.isFinite(longitude) && longitude >= -180 && longitude <= 180
+
+  if (hasValidLatitude && hasValidLongitude) {
+    return {
+      latitude,
+      longitude,
+      hasSelectedCoordinates: true,
+    }
+  }
+
+  return {
+    latitude: DEFAULT_LATITUDE,
+    longitude: DEFAULT_LONGITUDE,
+    hasSelectedCoordinates: false,
+  }
+})
+
+const yandexMapSrc = computed(() => {
+  const params = new URLSearchParams({
+    ll: `${mapCoordinates.value.longitude},${mapCoordinates.value.latitude}`,
+    z: mapCoordinates.value.hasSelectedCoordinates ? '16' : '11',
+  })
+
+  if (mapCoordinates.value.hasSelectedCoordinates) {
+    params.set(
+      'pt',
+      `${mapCoordinates.value.longitude},${mapCoordinates.value.latitude},pm2rdm`
+    )
+  }
+
+  return `https://yandex.kz/map-widget/v1/?${params.toString()}`
+})
 </script>
 
 <template>
   <div class="image-wrapper">
     <transition name="fade" mode="out-in">
       <iframe
-        v-if="currentView === 'map'"
-        key="map"
-        src="https://yandex.kz/map-widget/v1/?um=constructor%3A1f1d8b93c7c1f9f2f7b6b0c4a3c8example"
+        v-if="currentView === 'map' || currentView === 'floor'"
+        :key="currentView"
+        :src="yandexMapSrc"
         frameborder="0"
         allowfullscreen
       ></iframe>
-
-      <img
-        v-else-if="currentView === 'floor'"
-        key="k2"
-        :src="K2"
-        alt="Building preview"
-      />
 
       <img
         v-else-if="currentView === 'room'"

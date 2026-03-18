@@ -1,6 +1,9 @@
 export interface Building {
   id: number
+  name?: string | null
   address: string
+  latitude?: number | null
+  longitude?: number | null
   total_floors: number
   created_at: string
   updated_at?: string

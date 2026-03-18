@@ -1,7 +1,31 @@
 <script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
 import { studentMenu } from '../model/menu'
 import SidebarItem from './SidebarItem.vue'
 import HeaderLogo from '@/widgets/header/ui/HeaderLogo.vue'
+import {
+  getCachedDormAccessState,
+  getDormAccessState,
+  UNAPPROVED_STUDENT_ALLOWED_ROUTES,
+} from '@/shared/lib/dormAccess'
+
+const dormAccessState = ref(getCachedDormAccessState())
+
+const visibleMenuItems = computed(() => {
+  if (dormAccessState.value?.isStudent && !dormAccessState.value.isApproved) {
+    return studentMenu.filter((item) =>
+      UNAPPROVED_STUDENT_ALLOWED_ROUTES.includes(
+        item.route as (typeof UNAPPROVED_STUDENT_ALLOWED_ROUTES)[number]
+      )
+    )
+  }
+
+  return studentMenu
+})
+
+onMounted(async () => {
+  dormAccessState.value = await getDormAccessState()
+})
 </script>
 
 <template>
@@ -13,7 +37,7 @@ import HeaderLogo from '@/widgets/header/ui/HeaderLogo.vue'
     <div class="menu">
       <SidebarItem
         class="menu_items"
-        v-for="item in studentMenu"
+        v-for="item in visibleMenuItems"
         :key="item.route"
         :item="item"
       />

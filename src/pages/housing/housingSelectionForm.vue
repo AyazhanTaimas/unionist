@@ -28,6 +28,14 @@ defineEmits<{
   (e: 'submit'): void
   (e: 'cancel-change'): void
 }>()
+
+function getBuildingLabel(building: Building) {
+  if (building.name) {
+    return `${building.name} (${building.address})`
+  }
+
+  return building.address
+}
 </script>
 
 <template>
@@ -54,7 +62,7 @@ defineEmits<{
           >
             <option value="" disabled>Выберите корпус</option>
             <option v-for="b in buildings" :key="b.id" :value="b.id">
-              {{ b.address }}
+              {{ getBuildingLabel(b) }}
             </option>
           </select>
         </div>

@@ -169,7 +169,10 @@ export function useHousingPage() {
         const settlement = res.data.settlement
 
         currentResidence.value = {
-          building_name: settlement.room?.floor?.building?.address ?? 'Корпус',
+          building_name:
+            settlement.room?.floor?.building?.name ??
+            settlement.room?.floor?.building?.address ??
+            'Корпус',
           floor_number: settlement.room?.floor?.floor_number ?? 0,
           room_number: settlement.room?.room_number ?? '',
         }
@@ -342,6 +345,7 @@ export function useHousingPage() {
     isChangingRoom,
     canSubmit,
     currentView,
+    selectedBuilding,
     hasActiveResidence,
     residenceTitle,
     submitButtonText,
