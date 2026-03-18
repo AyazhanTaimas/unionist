@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import Sidebar from '@/widgets/sidebar/ui/Sidebar.vue';
-import Header from '@/widgets/header/ui/Header.vue';
+import Sidebar from '@/roles/student/widgets/sidebar/ui/Sidebar.vue';
+import Header from '@/roles/student/widgets/header/ui/Header.vue';
 </script>
 
 <template>

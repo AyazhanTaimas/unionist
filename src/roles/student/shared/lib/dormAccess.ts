@@ -78,6 +78,12 @@ function persistUser(user: CurrentUser | null): void {
   localStorage.setItem(USER_ID_STORAGE_KEY, String(user.id))
 }
 
+export function persistDormAccessUser(user: CurrentUser | null): void {
+  currentUserValue = user
+  currentUserPromise = null
+  persistUser(user)
+}
+
 function readStoredApproval(): boolean | null {
   if (!hasToken()) {
     return null
@@ -199,14 +205,21 @@ export async function getDormAccessState(): Promise<DormAccessState> {
       }
 
       try {
-        const { data } = await api.get(`/settlements/is-living/${user.id}`)
-        const isApproved = Boolean(data?.data?.is_living)
+        let isApproved: boolean | null = null
 
-        persistApproval(isApproved)
+        try {
+          const { data } = await api.get(`/settlements/is-living/${user.id}`)
+          isApproved = Boolean(data?.data?.is_living)
+        } catch {
+          const { data } = await api.get(`/showStatus/${user.id}`)
+          isApproved = Boolean(data?.data?.is_living)
+        }
+
+        persistApproval(Boolean(isApproved))
 
         return {
           isStudent: true,
-          isApproved,
+          isApproved: Boolean(isApproved),
         }
       } catch {
         return {

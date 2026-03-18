@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import NewsCard from '@/entities/news/ui/NewsCard.vue'
-import { getNews } from '@/pages/news/NewsApi'
-import type { NewsItem } from '@/entities/news/model/types'
+import NewsCard from '@/roles/student/entities/news/ui/NewsCard.vue'
+import { getNews } from '@/roles/student/pages/news/NewsApi'
+import type { NewsItem } from '@/roles/student/entities/news/model/types'
 
 const news = ref<NewsItem[]>([])
 const loading = ref(true)

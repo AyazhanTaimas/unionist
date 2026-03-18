@@ -3,7 +3,7 @@ import BellIcon from './BellIcon.vue'
 import UserIcon from './UserIcon.vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/api/instance'
-import { resetDormAccessState } from '@/shared/lib/dormAccess'
+import { resetDormAccessState } from '@/roles/student/shared/lib/dormAccess'
 
 const router = useRouter();
 

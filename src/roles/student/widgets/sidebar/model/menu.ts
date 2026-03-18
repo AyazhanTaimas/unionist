@@ -1,11 +1,11 @@
-import HousingIcon from "@/shared/layout/ui/icons/HousingIcon.vue";
+import HousingIcon from "@/roles/student/shared/layout/ui/icons/HousingIcon.vue";
 import type { SidebarItem } from "./types";
-import HomeIcon from "@/shared/layout/ui/icons/HomeIcon.vue";
-import RequestIcon from "@/shared/layout/ui/icons/RequestIcon.vue";
-import FinanceIcon from "@/shared/layout/ui/icons/FinanceIcon.vue";
-import PenaltyIcon from "@/shared/layout/ui/icons/PenaltyIcon.vue";
-import GymIcon from "@/shared/layout/ui/icons/GymIcon.vue";
-import BuySellIcon from "@/shared/layout/ui/icons/BuySellIcon.vue";
+import HomeIcon from "@/roles/student/shared/layout/ui/icons/HomeIcon.vue";
+import RequestIcon from "@/roles/student/shared/layout/ui/icons/RequestIcon.vue";
+import FinanceIcon from "@/roles/student/shared/layout/ui/icons/FinanceIcon.vue";
+import PenaltyIcon from "@/roles/student/shared/layout/ui/icons/PenaltyIcon.vue";
+import GymIcon from "@/roles/student/shared/layout/ui/icons/GymIcon.vue";
+import BuySellIcon from "@/roles/student/shared/layout/ui/icons/BuySellIcon.vue";
 
 export const studentMenu: SidebarItem[] = [
     {label: 'Главная', route: '/news', icon: HomeIcon},
