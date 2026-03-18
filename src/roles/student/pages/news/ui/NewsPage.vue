@@ -40,6 +40,8 @@ onMounted(async () => {
 .news-page {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  min-height: 0;
   gap: 24px;
 }
 
@@ -52,9 +54,26 @@ onMounted(async () => {
 }
 
 .news-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 8px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-   font-family: 'Montserrat', sans-serif;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.news-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.news-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.65);
+}
+
+.news-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 </style>

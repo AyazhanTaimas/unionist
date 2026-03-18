@@ -20,20 +20,26 @@ import Header from '@/roles/student/widgets/header/ui/Header.vue';
 <style scoped lang="scss">
 .layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: #f3f4f6;
   font: 'Montserrat';
 }
 
 .main {
   flex: 1;
+  height: 100vh;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .content {
   flex: 1;
+  min-height: 0;
   padding: 24px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 </style>
