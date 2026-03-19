@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import MainLayout from '@/roles/student/widgets/layout/ui/MainLayout.vue'
+import StudentLayout from '@/roles/student/widgets/layout/ui/MainLayout.vue'
+import ManagerLayout from '@/roles/manager/widgets/layout/ui/MainLayout.vue'
 import LoginPage from '@/pages/login/LoginPage.vue';
 import {
   canUnapprovedStudentAccessPath,
@@ -34,13 +35,18 @@ export const router = createRouter({
       name: 'payment-cancel',
       component: () => import('@/roles/student/pages/finance/PaymentCancel.vue'),
     },
+    {
+      path: '/news',
+      name: 'news',
+      component: () => import('@/roles/student/pages/news/ui/NewsPage.vue'),
+    },
 
     {
       path: '/',
-      component: MainLayout,
+      component: StudentLayout,
       children: [
         {
-          path: 'news',
+          path: '/news',
           name: 'news',
           component: () => import('@/roles/student/pages/news/ui/NewsPage.vue'),
         },
@@ -77,29 +83,51 @@ export const router = createRouter({
         },
       ],
     },
+    {
+      path: '/manager',
+      component: ManagerLayout,
+      children: [
+        {
+          path: '',
+          name: 'manager-home',
+          component: () => import('@/roles/manager/pages/HomePage.vue'),
+        },
+        {
+          path: 'news',
+          name: 'manager-news',
+          component: () => import('@/roles/student/pages/news/ui/NewsPage.vue'),
+        },
+        {
+          path: 'news/create',
+          name: 'manager-news-create',
+          component: () => import('@/roles/manager/pages/news/NewsPage.vue'),
+        },
+      ],
+    },
 
 
   ],
 })
 
 router.beforeEach(async (to) => {
-  if (to.path === '/login') {
-    return true
+  const token = localStorage.getItem('token')
+  const role = localStorage.getItem('role')
+
+  if (to.path === '/login') return true
+
+  if (!token) {
+    return { path: '/login' }
   }
 
-  if (!localStorage.getItem('token')) {
-    return true
+  // 🔥 manager защита
+  if (to.path.startsWith('/manager') && role !== 'manager') {
+    return { path: '/news' }
   }
 
-  const dormAccessState = await getDormAccessState()
-
-  if (!dormAccessState.isStudent || dormAccessState.isApproved) {
-    return true
+  // 🔥 если manager пытается в student
+  if (!to.path.startsWith('/manager') && role === 'manager') {
+    return { path: '/manager' }
   }
 
-  if (canUnapprovedStudentAccessPath(to.path)) {
-    return true
-  }
-
-  return { path: '/news' }
+  return true
 })
