@@ -2,19 +2,20 @@ import { createRouter, createWebHistory } from 'vue-router'
 import StudentLayout from '@/roles/student/widgets/layout/ui/MainLayout.vue'
 import ManagerLayout from '@/roles/manager/widgets/layout/ui/MainLayout.vue'
 import LoginPage from '@/pages/login/LoginPage.vue';
+import DormAdminLayout from '@/roles/dorm-admin/widgets/layout/ui/MainLayout.vue' 
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    {
-      path: '/login',
-      name: 'login',
-      component: LoginPage,
-    },
+    // {
+    //   path: '/login',
+    //   name: 'login',
+    //   component: LoginPage,
+    // },
 
     {
       path: '/',
-      redirect: '/login',
+      redirect: '/dorm-admin/news', //после того как создали dorm-admin поменять на login
     },
     {
       path: '/payment-success',
@@ -111,29 +112,59 @@ export const router = createRouter({
       ],
     },
 
+    {
+  path: '/dorm-admin',
+  component: DormAdminLayout,
+  children: [
+    {
+      path: '',
+      redirect: '/dorm-admin/news',
+    },
+    {
+      path: 'news',
+      name: 'dorm-admin-news',
+      component: () => import('@/roles/student/pages/news/ui/NewsPage.vue'),
+    },
+    {
+      path: 'penalties',
+      name: 'dorm-admin-penalties',
+      component: () => import('@/roles/dorm-admin/pages/penalty/Penalty.vue'),
+    },
+  ],
+},
+
 
   ],
 })
 
-router.beforeEach(async (to) => {
-  const token = localStorage.getItem('token')
-  const role = localStorage.getItem('role')
+// router.beforeEach(async (to) => {
+//   const token = localStorage.getItem('token')
+//   const role = localStorage.getItem('role')
 
-  if (to.path === '/login') return true
+//   if (to.path === '/login') return true
 
-  if (!token) {
-    return { path: '/login' }
-  }
+//   if (!token) {
+//     return { path: '/login' }
+//   }
 
-  // 🔥 manager защита
-  if (to.path.startsWith('/manager') && role !== 'manager') {
-    return { path: '/news' }
-  }
+//   // 🔥 dorm-admin доступ
+//   if (to.path.startsWith('/dorm-admin') && role !== 'dorm-admin') {
+//     return { path: '/news' }
+//   }
 
-  // 🔥 если manager пытается в student
-  if (!to.path.startsWith('/manager') && role === 'manager') {
-    return { path: '/manager' }
-  }
+//   // 🔥 manager доступ
+//   if (to.path.startsWith('/manager') && role !== 'manager') {
+//     return { path: '/news' }
+//   }
 
-  return true
-})
+//   // 🔥 редиректы по ролям
+//   if (role === 'manager' && !to.path.startsWith('/manager')) {
+//     return { path: '/manager' }
+//   }
+
+//   if (role === 'dorm-admin' && !to.path.startsWith('/dorm-admin')) {
+//     return { path: '/dorm-admin/news' }
+//   }
+
+//   return true
+// })

@@ -36,7 +36,11 @@ const handleLogin = async () => {
     // 🔥 ГЛАВНОЕ ИСПРАВЛЕНИЕ
     if (user.role === 'manager') {
       router.push('/manager')
-    } else {
+    } 
+    else if(user.role === 'dorm-admin') {
+      router.push('dorm-admin')
+    }
+    else {
       router.push({ name: 'news' })
     }
 
