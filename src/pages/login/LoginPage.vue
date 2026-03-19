@@ -24,17 +24,27 @@ const handleLogin = async () => {
       password: password.value,
     })
 
+    const user = response.data.user
+
     resetDormAccessState()
     localStorage.setItem('token', response.data.token.access_token)
-    persistDormAccessUser(response.data.user)
-    console.log(response, 'token')
-    router.push({ name: 'news' })
+    localStorage.setItem('role', user.role) // 🔥 ДОБАВЬ ЭТО
+    persistDormAccessUser(user)
+
+    console.log(user.role, 'ROLE')
+
+    // 🔥 ГЛАВНОЕ ИСПРАВЛЕНИЕ
+    if (user.role === 'manager') {
+      router.push('/manager')
+    } else {
+      router.push({ name: 'news' })
+    }
+
   } catch (e: any) {
     error.value = 'Invalid email or password'
   } finally {
     loading.value = false
   }
-
 }
 </script>
 
