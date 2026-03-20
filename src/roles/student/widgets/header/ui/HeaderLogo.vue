@@ -1,6 +1,6 @@
 <template>
   <div class="logo">
-    <img src="@/assets/group 26.svg" alt="UniNest" />
+    <img src="@/assets/Group 26.svg" alt="UniNest" />
   </div>
 </template>
 
