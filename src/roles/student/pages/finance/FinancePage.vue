@@ -69,7 +69,7 @@ function getChargePresentation(kind: ChargeKind, rawType: string) {
     default:
       return {
         title: 'Другая оплата',
-        subtitle: rawType.replaceAll('_', ' '),
+        subtitle: rawType.replace(/_/g, ' '),
       }
   }
 }

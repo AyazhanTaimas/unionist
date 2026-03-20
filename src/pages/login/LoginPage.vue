@@ -25,19 +25,17 @@ const handleLogin = async () => {
     })
 
     const user = response.data.user
+    const role = user.role ?? 'student'
 
     resetDormAccessState()
     localStorage.setItem('token', response.data.token.access_token)
-    localStorage.setItem('role', user.role) // 🔥 ДОБАВЬ ЭТО
+    localStorage.setItem('role', role)
     persistDormAccessUser(user)
 
-    console.log(user.role, 'ROLE')
-
-    // 🔥 ГЛАВНОЕ ИСПРАВЛЕНИЕ
-    if (user.role === 'manager') {
+    if (role === 'manager') {
       router.push('/manager')
     } 
-    else if(user.role === 'dorm-admin') {
+    else if(role === 'dorm-admin') {
       router.push('dorm-admin')
     }
     else {

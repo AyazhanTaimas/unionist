@@ -29,16 +29,8 @@ const redeemForm = ref({
 
 const redeemFormError = ref<string | null>(null)
 
-const totalPoints = computed(() => {
-  return penalties.value.reduce((sum, item) => sum + item.points, 0)
-})
-
 const positiveCount = computed(() => {
   return penalties.value.filter(item => item.points > 0).length
-})
-
-const negativeCount = computed(() => {
-  return penalties.value.filter(item => item.points < 0).length
 })
 
 const scoreText = computed(() => {

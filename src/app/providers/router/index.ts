@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import StudentLayout from '@/roles/student/widgets/layout/ui/MainLayout.vue'
 import ManagerLayout from '@/roles/manager/widgets/layout/ui/MainLayout.vue'
-import LoginPage from '@/pages/login/LoginPage.vue';
 import DormAdminLayout from '@/roles/dorm-admin/widgets/layout/ui/MainLayout.vue' 
 
 export const router = createRouter({
