@@ -1,20 +1,21 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import StudentLayout from '@/roles/student/widgets/layout/ui/MainLayout.vue'
 import ManagerLayout from '@/roles/manager/widgets/layout/ui/MainLayout.vue'
+import LoginPage from '@/pages/login/LoginPage.vue'
 import DormAdminLayout from '@/roles/dorm-admin/widgets/layout/ui/MainLayout.vue' 
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    // {
-    //   path: '/login',
-    //   name: 'login',
-    //   component: LoginPage,
-    // },
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginPage,
+    },
 
     {
       path: '/',
-      redirect: '/dorm-admin/news', //после того как создали dorm-admin поменять на login
+      redirect: '/login',
     },
     {
       path: '/payment-success',
