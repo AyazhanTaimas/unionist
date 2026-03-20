@@ -1,0 +1,14 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+COPY entrypoint.sh /usr/local/bin/frontend-entrypoint
+RUN chmod +x /usr/local/bin/frontend-entrypoint
+
+EXPOSE 5173
+
+ENTRYPOINT ["/usr/local/bin/frontend-entrypoint"]
