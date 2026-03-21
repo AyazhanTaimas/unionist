@@ -220,7 +220,7 @@ onMounted(fetchPenalties)
   <section class="penalties-page">
     <div class="hero">
       <div>
-        <p class="eyebrow">Employee / Penalty</p>
+        <p class="eyebrow">Dorm Admin / Penalty</p>
         <h1>Штрафы общежития</h1>
         <p class="description">
           Управление дисциплинарными штрафами в модуле Penalty: выдача новых

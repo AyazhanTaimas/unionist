@@ -168,11 +168,6 @@ export const router = createRouter({
           component: () => import('@/roles/employee/pages/news/NewsPage.vue'),
         },
         {
-          path: 'penalties',
-          name: 'employee-penalties',
-          component: () => import('@/roles/employee/pages/penalty/PenaltyPage.vue'),
-        },
-        {
           path: 'repairs',
           name: 'employee-repairs',
           component: () => import('@/roles/employee/pages/repairs/RepairsPage.vue'),
@@ -185,11 +180,7 @@ export const router = createRouter({
     },
     {
       path: '/dorm-admin/:pathMatch(.*)*',
-      redirect: (to) => {
-        const rawPath = to.params.pathMatch
-        const pathMatch = Array.isArray(rawPath) ? rawPath.join('/') : String(rawPath || '')
-        return pathMatch ? `/employee/${pathMatch}` : '/employee/news'
-      },
+      redirect: '/employee/news',
     },
 
 
