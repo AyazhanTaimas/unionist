@@ -32,6 +32,7 @@ export interface PenaltyRule {
 export interface PenaltyEvidence {
   id: number
   file_path: string
+  url?: string | null
 }
 
 export interface PenaltyRedemption {
@@ -70,14 +71,6 @@ export interface PenaltyTarget {
   room: PenaltyRoom
 }
 
-export interface CreatePenaltyPayload {
-  user_id: number
-  rule_id: number
-  points?: number
-  description?: string
-  evidences?: string[]
-}
-
 export const getManagedPenalties = async (): Promise<ManagedPenalty[]> => {
   const { data } = await api.get<ApiEnvelope<ManagedPenalty[]>>('/penalties/manage')
   return data.data
@@ -93,10 +86,11 @@ export const getPenaltyTargets = async (): Promise<PenaltyTarget[]> => {
   return data.data
 }
 
-export const createPenalty = async (
-  payload: CreatePenaltyPayload
-): Promise<string> => {
-  const { data } = await api.post<ApiEnvelope<unknown>>('/penalties', payload)
+export const createPenalty = async (payload: FormData): Promise<string> => {
+  const { data } = await api.post<ApiEnvelope<unknown>>('/penalties', payload, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+
   return data.message
 }
 

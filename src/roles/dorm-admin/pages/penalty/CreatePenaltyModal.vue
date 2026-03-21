@@ -18,6 +18,7 @@ const saving = ref(false)
 const loadError = ref<string | null>(null)
 const formError = ref<string | null>(null)
 const targetQuery = ref('')
+const selectedFiles = ref<File[]>([])
 const targets = ref<PenaltyTarget[]>([])
 const rules = ref<PenaltyRule[]>([])
 
@@ -26,7 +27,6 @@ const form = ref({
   rule_id: '',
   points: '',
   description: '',
-  evidences: '',
 })
 
 const filteredTargets = computed(() => {
@@ -58,11 +58,10 @@ const selectedTarget = computed(
     null
 )
 
-const parseEvidences = (value: string) =>
-  value
-    .split(/\r?\n|,/)
-    .map((item) => item.trim())
-    .filter(Boolean)
+const handleFileChange = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  selectedFiles.value = Array.from(input.files || [])
+}
 
 const loadOptions = async () => {
   loading.value = true
@@ -106,13 +105,23 @@ const submit = async () => {
   saving.value = true
 
   try {
-    const message = await createPenalty({
-      user_id: Number(form.value.user_id),
-      rule_id: Number(form.value.rule_id),
-      points: form.value.points ? Number(form.value.points) : undefined,
-      description: form.value.description.trim() || undefined,
-      evidences: parseEvidences(form.value.evidences),
+    const payload = new FormData()
+    payload.append('user_id', form.value.user_id)
+    payload.append('rule_id', form.value.rule_id)
+
+    if (form.value.points) {
+      payload.append('points', form.value.points)
+    }
+
+    if (form.value.description.trim()) {
+      payload.append('description', form.value.description.trim())
+    }
+
+    selectedFiles.value.forEach((file) => {
+      payload.append('evidences[]', file)
     })
+
+    const message = await createPenalty(payload)
 
     emit('created', message)
   } catch (requestError: any) {
@@ -132,7 +141,7 @@ onMounted(loadOptions)
       <div class="modal-header">
         <div>
           <h2>Выдать штраф</h2>
-          <p>Выберите студента, правило и при необходимости добавьте доказательства.</p>
+          <p>Выберите студента, правило и при необходимости загрузите фото нарушения.</p>
         </div>
 
         <button class="close-btn" @click="emit('close')">✕</button>
@@ -201,16 +210,24 @@ onMounted(loadOptions)
           placeholder="Контекст нарушения, обстоятельства, дополнительные детали"
         />
 
-        <label>Доказательства</label>
-        <textarea
-          v-model="form.evidences"
-          placeholder="Укажите URL или file_path, по одному на строке"
+        <label>Фото / доказательства</label>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          @change="handleFileChange"
         />
 
         <p class="helper-text">
-          Отдельного upload API для Penalty сейчас нет, поэтому здесь передаются
-          готовые пути/ссылки.
+          Можно прикрепить несколько изображений. Файлы будут загружены в backend,
+          а в БД сохранится путь к каждому изображению.
         </p>
+
+        <div v-if="selectedFiles.length" class="file-list">
+          <div v-for="file in selectedFiles" :key="file.name + file.size" class="file-chip">
+            {{ file.name }}
+          </div>
+        </div>
 
         <div v-if="formError" class="form-error">
           {{ formError }}
@@ -322,6 +339,21 @@ onMounted(loadOptions)
   border-radius: 14px;
   padding: 12px 14px;
   color: #9a3412;
+}
+
+.file-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.file-chip {
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: #eef4ff;
+  color: #1d4ed8;
+  font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 .state-box {

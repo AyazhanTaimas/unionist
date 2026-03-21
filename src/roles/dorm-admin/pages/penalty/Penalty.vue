@@ -137,6 +137,8 @@ const pointsLabel = (points: number) =>
 
 const isExternalLink = (value: string) => /^https?:\/\//i.test(value)
 
+const getEvidenceLink = (filePath: string, url?: string | null) => url || filePath
+
 const handleCreated = async (message: string) => {
   notice.value = message
   error.value = null
@@ -352,9 +354,9 @@ onMounted(fetchPenalties)
           <div class="evidence-list">
             <template v-for="evidence in penalty.evidences" :key="evidence.id">
               <a
-                v-if="isExternalLink(evidence.file_path)"
+                v-if="isExternalLink(getEvidenceLink(evidence.file_path, evidence.url))"
                 class="evidence-chip"
-                :href="evidence.file_path"
+                :href="getEvidenceLink(evidence.file_path, evidence.url)"
                 target="_blank"
                 rel="noreferrer"
               >
