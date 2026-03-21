@@ -8,6 +8,8 @@ import {
   type PenaltyDetail,
 } from './penaltyApi'
 
+const penaltyRulesPdfUrl = '/penalty_rules.pdf'
+
 type PageMode = 'list' | 'detail'
 
 const loading = ref(false)
@@ -197,7 +199,14 @@ onMounted(() => {
 
           <div class="rules-note">
             С уставами и правилами штрафов вы можете ознакомиться пройдя по ссылке.
-            <a href="#" class="rules-link">Уставы и правила штрафов</a>
+            <a
+              :href="penaltyRulesPdfUrl"
+              class="rules-link"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Уставы и правила штрафов
+            </a>
           </div>
         </template>
 
@@ -223,7 +232,14 @@ onMounted(() => {
               {{ selectedPenalty.description }}
             </p>
 
-            <a href="#" class="rules-link detail-link">Уставы и правила штрафов</a>
+            <a
+              :href="penaltyRulesPdfUrl"
+              class="rules-link detail-link"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Уставы и правила штрафов
+            </a>
 
             <div v-if="selectedPenalty.images?.length" class="images-grid">
               <div
