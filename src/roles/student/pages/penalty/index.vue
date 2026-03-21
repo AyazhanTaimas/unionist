@@ -225,16 +225,18 @@ onMounted(() => {
 
             <a href="#" class="rules-link detail-link">Уставы и правила штрафов</a>
 
-            <div class="images-grid">
+            <div v-if="selectedPenalty.images?.length" class="images-grid">
               <div
-                v-for="(image, index) in selectedPenalty.images?.length
-                  ? selectedPenalty.images
-                  : ['/mock-penalty.jpg', '/mock-penalty.jpg', '/mock-penalty.jpg']"
+                v-for="(image, index) in selectedPenalty.images"
                 :key="index"
                 class="image-card"
               >
                 <img :src="image" alt="Penalty evidence" />
               </div>
+            </div>
+
+            <div v-else class="evidence-empty">
+              Доказательства не прикреплены
             </div>
           </template>
         </template>
@@ -494,6 +496,14 @@ onMounted(() => {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.evidence-empty {
+  max-width: 420px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #f8fafc;
+  color: #64748b;
 }
 
 .state-box {
