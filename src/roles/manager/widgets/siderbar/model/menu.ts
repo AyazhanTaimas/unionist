@@ -9,4 +9,5 @@ export const managerMenu: SidebarItem[] = [
   { label: 'Новости', route: '/manager/news', icon: HomeIcon },
   { label: 'Пользователи', route: '/manager/users', icon: PenaltyIcon },
   { label: 'Заявки на проживание', route: '/manager/requests', icon: RequestIcon },
+  { label: 'Смена комнаты', route: '/manager/requests/change-room', icon: RequestIcon },
 ]

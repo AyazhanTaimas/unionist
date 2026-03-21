@@ -124,6 +124,11 @@ export const router = createRouter({
           name: 'manager-requests',
           component: () => import('@/roles/manager/pages/requests/RequestsPage.vue'),
         },
+        {
+          path: 'requests/change-room',
+          name: 'manager-change-room-requests',
+          component: () => import('@/roles/manager/pages/requests/ChangeRoomRequestsPage.vue'),
+        },
       ],
     },
 

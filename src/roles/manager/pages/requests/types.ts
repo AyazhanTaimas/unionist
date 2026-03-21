@@ -46,6 +46,39 @@ export interface ManagerLiveRequest {
   documents: ManagerRequestDocument[]
 }
 
+export interface ManagerDormStudent {
+  user_id: number
+  warning_count: number | null
+  user: ManagerRequestStudent | null
+}
+
+export interface ManagerSettlement {
+  id: number
+  user_id: number
+  room_id: number
+  status: string
+  start_at: string | null
+  end_at: string | null
+  room: ManagerRequestRoom | null
+}
+
+export interface ManagerSettlementStatus {
+  is_living: boolean
+  settlement: ManagerSettlement | null
+}
+
+export interface ManagerChangeRoomRequest {
+  id: number
+  student_id: number
+  room_id: number | null
+  status: 'pending' | 'accepted' | 'rejected' | string
+  description: string | null
+  created_at: string
+  updated_at: string
+  student: ManagerDormStudent | null
+  room: ManagerRequestRoom | null
+}
+
 export interface ManagerApiResponse<T> {
   status_code: number
   message: string
