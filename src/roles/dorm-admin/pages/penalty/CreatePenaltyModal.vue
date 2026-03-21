@@ -1,71 +1,227 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import {
+  createPenalty,
+  getPenaltyRules,
+  getPenaltyTargets,
+  type PenaltyRule,
+  type PenaltyTarget,
+} from './api'
 
-const emit = defineEmits(['close'])
+const emit = defineEmits<{
+  close: []
+  created: [message: string]
+}>()
 
-const type = ref<'student' | 'room'>('student')
+const loading = ref(false)
+const saving = ref(false)
+const loadError = ref<string | null>(null)
+const formError = ref<string | null>(null)
+const targetQuery = ref('')
+const targets = ref<PenaltyTarget[]>([])
+const rules = ref<PenaltyRule[]>([])
+
+const form = ref({
+  user_id: '',
+  rule_id: '',
+  points: '',
+  description: '',
+  evidences: '',
+})
+
+const filteredTargets = computed(() => {
+  const query = targetQuery.value.trim().toLowerCase()
+  if (!query) return targets.value
+
+  return targets.value.filter((target) => {
+    const searchable = [
+      target.user?.full_name,
+      target.user?.email,
+      target.user?.uni_id,
+      target.room.label,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+
+    return searchable.includes(query)
+  })
+})
+
+const selectedRule = computed(
+  () => rules.value.find((rule) => rule.id === Number(form.value.rule_id)) || null
+)
+
+const selectedTarget = computed(
+  () =>
+    targets.value.find((target) => target.user?.id === Number(form.value.user_id)) ||
+    null
+)
+
+const parseEvidences = (value: string) =>
+  value
+    .split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+
+const loadOptions = async () => {
+  loading.value = true
+  loadError.value = null
+
+  try {
+    const [loadedTargets, loadedRules] = await Promise.all([
+      getPenaltyTargets(),
+      getPenaltyRules(),
+    ])
+
+    targets.value = loadedTargets
+    rules.value = loadedRules
+  } catch (requestError: any) {
+    loadError.value =
+      requestError?.response?.data?.message ||
+      'Не удалось загрузить правила и список студентов'
+  } finally {
+    loading.value = false
+  }
+}
+
+const submit = async () => {
+  formError.value = null
+
+  if (!form.value.user_id) {
+    formError.value = 'Выберите студента'
+    return
+  }
+
+  if (!form.value.rule_id) {
+    formError.value = 'Выберите правило штрафа'
+    return
+  }
+
+  if (form.value.points && Number(form.value.points) <= 0) {
+    formError.value = 'Количество баллов должно быть больше нуля'
+    return
+  }
+
+  saving.value = true
+
+  try {
+    const message = await createPenalty({
+      user_id: Number(form.value.user_id),
+      rule_id: Number(form.value.rule_id),
+      points: form.value.points ? Number(form.value.points) : undefined,
+      description: form.value.description.trim() || undefined,
+      evidences: parseEvidences(form.value.evidences),
+    })
+
+    emit('created', message)
+  } catch (requestError: any) {
+    formError.value =
+      requestError?.response?.data?.message || 'Не удалось создать штраф'
+  } finally {
+    saving.value = false
+  }
+}
+
+onMounted(loadOptions)
 </script>
 
 <template>
   <div class="overlay" @click.self="emit('close')">
     <div class="modal">
-      <!-- HEADER -->
       <div class="modal-header">
         <div>
-          <h2>Create Penalty</h2>
-          <p>Issue a new violation record for a student or room.</p>
+          <h2>Выдать штраф</h2>
+          <p>Выберите студента, правило и при необходимости добавьте доказательства.</p>
         </div>
-        <span class="close" @click="emit('close')">✕</span>
+
+        <button class="close-btn" @click="emit('close')">✕</button>
       </div>
 
-      <!-- TYPE -->
-      <div class="type-switch">
-        <div
-          class="type-card"
-          :class="{ active: type === 'student' }"
-          @click="type = 'student'"
-        >
-          <span>👤</span>
-          <div>
-            <b>Student</b>
-            <p>Assign to a specific resident</p>
-          </div>
+      <div v-if="loading" class="state-box">
+        Загрузка формы...
+      </div>
+
+      <div v-else-if="loadError" class="state-box state-box--error">
+        {{ loadError }}
+      </div>
+
+      <div v-else class="form">
+        <label>Поиск студента</label>
+        <input
+          v-model="targetQuery"
+          placeholder="Имя, email, Uni ID или комната"
+        />
+
+        <label>Студент</label>
+        <select v-model="form.user_id">
+          <option value="">Выберите студента</option>
+          <option
+            v-for="target in filteredTargets"
+            :key="target.settlement_id"
+            :value="target.user?.id || ''"
+          >
+            {{
+              `${target.user?.full_name || 'Без имени'} • ${target.room.label} • ${target.user?.uni_id || 'без ID'}`
+            }}
+          </option>
+        </select>
+
+        <div v-if="selectedTarget" class="selection-note">
+          {{ selectedTarget.user?.email }} • {{ selectedTarget.room.label }}
         </div>
 
-        <div
-          class="type-card"
-          :class="{ active: type === 'room' }"
-          @click="type = 'room'"
-        >
-          <span>🛏</span>
-          <div>
-            <b>Room</b>
-            <p>Assign to an entire dormitory unit</p>
-          </div>
+        <label>Правило штрафа</label>
+        <select v-model="form.rule_id">
+          <option value="">Выберите правило</option>
+          <option v-for="rule in rules" :key="rule.id" :value="rule.id">
+            {{ `${rule.code} • ${rule.title}` }}
+          </option>
+        </select>
+
+        <div v-if="selectedRule" class="selection-note">
+          По умолчанию: {{ selectedRule.default_points }} баллов
+          <span v-if="selectedRule.redeemable">• допускает отработку</span>
+          <span v-if="selectedRule.creates_financial_charge">
+            • создаст финансовое начисление
+          </span>
+        </div>
+
+        <label>Баллы</label>
+        <input
+          v-model="form.points"
+          type="number"
+          min="1"
+          placeholder="Оставьте пустым, чтобы взять значение из правила"
+        />
+
+        <label>Описание</label>
+        <textarea
+          v-model="form.description"
+          placeholder="Контекст нарушения, обстоятельства, дополнительные детали"
+        />
+
+        <label>Доказательства</label>
+        <textarea
+          v-model="form.evidences"
+          placeholder="Укажите URL или file_path, по одному на строке"
+        />
+
+        <p class="helper-text">
+          Отдельного upload API для Penalty сейчас нет, поэтому здесь передаются
+          готовые пути/ссылки.
+        </p>
+
+        <div v-if="formError" class="form-error">
+          {{ formError }}
         </div>
       </div>
 
-      <!-- FORM -->
-      <div class="form">
-        <label>Target Search</label>
-        <input placeholder="Search name, student ID, or room number..." />
-
-        <label>Penalty Title</label>
-        <input placeholder="e.g. Noise Complaint, Unauthorized Guest" />
-
-        <label>Detailed Description</label>
-        <textarea placeholder="Provide context regarding the violation..." />
-
-        <label>Evidence Documentation</label>
-        <div class="upload">
-          <span>⬆ Upload files</span>
-        </div>
-      </div>
-
-      <!-- ACTIONS -->
       <div class="actions">
-        <button class="cancel" @click="emit('close')">Cancel</button>
-        <button class="submit">Create Penalty</button>
+        <button class="cancel-btn" @click="emit('close')">Отмена</button>
+        <button class="submit-btn" :disabled="saving || loading" @click="submit">
+          {{ saving ? 'Сохранение...' : 'Создать штраф' }}
+        </button>
       </div>
     </div>
   </div>
@@ -75,126 +231,156 @@ const type = ref<'student' | 'room'>('student')
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 20px;
 }
 
 .modal {
-  width: 520px;
-  background: white;
-  border-radius: 20px;
+  width: min(640px, 100%);
+  background: #ffffff;
+  border-radius: 28px;
   overflow: hidden;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
 }
 
-/* HEADER */
 .modal-header {
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-
+  padding: 24px;
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
-
-  h2 {
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  p {
-    font-size: 13px;
-    color: #6b7280;
-  }
+  gap: 16px;
 }
 
-.close {
-  cursor: pointer;
+.modal-header h2 {
+  margin: 0;
+  font-size: 24px;
 }
 
-/* TYPE */
-.type-switch {
-  display: flex;
-  gap: 12px;
-  padding: 20px;
+.modal-header p {
+  margin: 8px 0 0;
+  color: #64748b;
+  line-height: 1.5;
 }
 
-.type-card {
-  flex: 1;
-  padding: 16px;
+.close-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  background: #f8fafc;
   cursor: pointer;
-
-  display: flex;
-  gap: 10px;
-  align-items: center;
-
-  p {
-    font-size: 12px;
-    color: #6b7280;
-  }
-
-  &.active {
-    border: 2px solid #4f46e5;
-    background: #eef2ff;
-  }
 }
 
-/* FORM */
 .form {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 0 20px 20px;
-
-  label {
-    font-size: 12px;
-    color: #6b7280;
-  }
-
-  input,
-  textarea {
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
-  }
-
-  textarea {
-    min-height: 80px;
-  }
+  padding: 24px;
 }
 
-.upload {
-  border: 2px dashed #e5e7eb;
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
+.form label {
+  font-size: 12px;
   color: #6b7280;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-/* ACTIONS */
+.form input,
+.form select,
+.form textarea {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 14px;
+  border: 1px solid #dbe5f0;
+  background: #ffffff;
+  color: #172033;
+  box-sizing: border-box;
+}
+
+.form textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.selection-note,
+.helper-text {
+  margin: 0;
+  font-size: 13px;
+  color: #68768b;
+  line-height: 1.5;
+}
+
+.helper-text {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 14px;
+  padding: 12px 14px;
+  color: #9a3412;
+}
+
+.state-box {
+  margin: 24px;
+  padding: 18px;
+  border-radius: 18px;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.state-box--error,
+.form-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.form-error {
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+
 .actions {
   display: flex;
   gap: 12px;
-  padding: 20px;
-  border-top: 1px solid #eee;
+  padding: 20px 24px 24px;
+  border-top: 1px solid #e2e8f0;
+}
 
-  .cancel {
-    flex: 1;
-    background: #f3f4f6;
-    border-radius: 10px;
-    padding: 12px;
-  }
+.cancel-btn,
+.submit-btn {
+  flex: 1;
+  height: 48px;
+  border: none;
+  border-radius: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
 
-  .submit {
-    flex: 1;
-    background: #4f46e5;
-    color: white;
-    border-radius: 10px;
-    padding: 12px;
+.cancel-btn {
+  background: #eef2f7;
+  color: #172033;
+}
+
+.submit-btn {
+  background: #172033;
+  color: #ffffff;
+}
+
+.submit-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+  .modal-header,
+  .actions {
+    flex-direction: column;
   }
 }
 </style>
