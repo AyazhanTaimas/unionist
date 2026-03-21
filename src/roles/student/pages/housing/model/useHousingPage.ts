@@ -114,7 +114,7 @@ export function useHousingPage() {
       localStorage.setItem('user_id', String(user.id))
 
       if (user.role) {
-        localStorage.setItem('role', user.role === 'employee' ? 'dorm-admin' : user.role)
+        localStorage.setItem('role', user.role)
       }
 
       return Number(user.id)

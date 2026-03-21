@@ -25,8 +25,7 @@ const handleLogin = async () => {
     })
 
     const user = response.data.user
-    const rawRole = user.role ?? 'student'
-    const role = rawRole === 'employee' ? 'dorm-admin' : rawRole
+    const role = user.role ?? 'student'
 
     resetDormAccessState()
     localStorage.setItem('token', response.data.token.access_token)
@@ -38,17 +37,13 @@ const handleLogin = async () => {
 
     if (role === 'manager') {
       router.push('/manager')
-    } 
-    else if(role === 'admin') {
+    } else if (role === 'admin') {
       router.push('/manager')
-    }
-    else if(role === 'dorm-admin') {
-      router.push('/dorm-admin/news')
-    }
-    else {
+    } else if (role === 'employee') {
+      router.push('/employee/news')
+    } else {
       router.push({ name: 'news' })
     }
-
   } catch (e: any) {
     error.value = 'Invalid email or password'
   } finally {
