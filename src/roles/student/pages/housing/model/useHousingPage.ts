@@ -210,7 +210,8 @@ export function useHousingPage() {
 
       if (status === 422) {
         alert(
-          data?.errors?.preferred_room_id?.[0] ||
+          data?.errors?.room_id?.[0] ||
+            data?.errors?.preferred_room_id?.[0] ||
             data?.message ||
             'Ошибка валидации'
         )
