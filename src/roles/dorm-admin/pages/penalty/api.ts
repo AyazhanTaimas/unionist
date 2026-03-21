@@ -71,6 +71,13 @@ export interface PenaltyTarget {
   room: PenaltyRoom
 }
 
+export interface PenaltyRoomTarget {
+  room_id: number
+  room: PenaltyRoom
+  active_residents_count: number
+  residents: PenaltyPerson[]
+}
+
 export const getManagedPenalties = async (): Promise<ManagedPenalty[]> => {
   const { data } = await api.get<ApiEnvelope<ManagedPenalty[]>>('/penalties/manage')
   return data.data
@@ -83,6 +90,11 @@ export const getPenaltyRules = async (): Promise<PenaltyRule[]> => {
 
 export const getPenaltyTargets = async (): Promise<PenaltyTarget[]> => {
   const { data } = await api.get<ApiEnvelope<PenaltyTarget[]>>('/penalties/targets')
+  return data.data
+}
+
+export const getPenaltyRoomTargets = async (): Promise<PenaltyRoomTarget[]> => {
+  const { data } = await api.get<ApiEnvelope<PenaltyRoomTarget[]>>('/penalties/rooms')
   return data.data
 }
 

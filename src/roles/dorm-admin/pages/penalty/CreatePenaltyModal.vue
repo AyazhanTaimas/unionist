@@ -3,8 +3,10 @@ import { computed, onMounted, ref } from 'vue'
 import {
   createPenalty,
   getPenaltyRules,
+  getPenaltyRoomTargets,
   getPenaltyTargets,
   type PenaltyRule,
+  type PenaltyRoomTarget,
   type PenaltyTarget,
 } from './api'
 
@@ -19,11 +21,14 @@ const loadError = ref<string | null>(null)
 const formError = ref<string | null>(null)
 const targetQuery = ref('')
 const selectedFiles = ref<File[]>([])
+const targetMode = ref<'student' | 'room'>('student')
 const targets = ref<PenaltyTarget[]>([])
+const roomTargets = ref<PenaltyRoomTarget[]>([])
 const rules = ref<PenaltyRule[]>([])
 
 const form = ref({
   user_id: '',
+  room_id: '',
   rule_id: '',
   points: '',
   description: '',
@@ -48,6 +53,24 @@ const filteredTargets = computed(() => {
   })
 })
 
+const filteredRoomTargets = computed(() => {
+  const query = targetQuery.value.trim().toLowerCase()
+  if (!query) return roomTargets.value
+
+  return roomTargets.value.filter((target) => {
+    const searchable = [
+      target.room.label,
+      ...target.residents.map((resident) =>
+        [resident.full_name, resident.email, resident.uni_id].filter(Boolean).join(' ')
+      ),
+    ]
+      .join(' ')
+      .toLowerCase()
+
+    return searchable.includes(query)
+  })
+})
+
 const selectedRule = computed(
   () => rules.value.find((rule) => rule.id === Number(form.value.rule_id)) || null
 )
@@ -57,6 +80,22 @@ const selectedTarget = computed(
     targets.value.find((target) => target.user?.id === Number(form.value.user_id)) ||
     null
 )
+
+const selectedRoomTarget = computed(
+  () => roomTargets.value.find((target) => target.room_id === Number(form.value.room_id)) || null
+)
+
+const setTargetMode = (mode: 'student' | 'room') => {
+  targetMode.value = mode
+  formError.value = null
+  targetQuery.value = ''
+
+  if (mode === 'student') {
+    form.value.room_id = ''
+  } else {
+    form.value.user_id = ''
+  }
+}
 
 const handleFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement
@@ -68,17 +107,19 @@ const loadOptions = async () => {
   loadError.value = null
 
   try {
-    const [loadedTargets, loadedRules] = await Promise.all([
+    const [loadedTargets, loadedRoomTargets, loadedRules] = await Promise.all([
       getPenaltyTargets(),
+      getPenaltyRoomTargets(),
       getPenaltyRules(),
     ])
 
     targets.value = loadedTargets
+    roomTargets.value = loadedRoomTargets
     rules.value = loadedRules
   } catch (requestError: any) {
     loadError.value =
       requestError?.response?.data?.message ||
-      'Не удалось загрузить правила и список студентов'
+      'Не удалось загрузить правила, список студентов и комнат'
   } finally {
     loading.value = false
   }
@@ -87,8 +128,13 @@ const loadOptions = async () => {
 const submit = async () => {
   formError.value = null
 
-  if (!form.value.user_id) {
+  if (targetMode.value === 'student' && !form.value.user_id) {
     formError.value = 'Выберите студента'
+    return
+  }
+
+  if (targetMode.value === 'room' && !form.value.room_id) {
+    formError.value = 'Выберите комнату'
     return
   }
 
@@ -106,7 +152,13 @@ const submit = async () => {
 
   try {
     const payload = new FormData()
-    payload.append('user_id', form.value.user_id)
+
+    if (targetMode.value === 'student') {
+      payload.append('user_id', form.value.user_id)
+    } else {
+      payload.append('room_id', form.value.room_id)
+    }
+
     payload.append('rule_id', form.value.rule_id)
 
     if (form.value.points) {
@@ -141,7 +193,7 @@ onMounted(loadOptions)
       <div class="modal-header">
         <div>
           <h2>Выдать штраф</h2>
-          <p>Выберите студента, правило и при необходимости загрузите фото нарушения.</p>
+          <p>Выберите студента или комнату, правило и при необходимости загрузите фото нарушения.</p>
         </div>
 
         <button class="close-btn" @click="emit('close')">✕</button>
@@ -157,29 +209,88 @@ onMounted(loadOptions)
         </div>
 
         <div v-else class="form">
-          <label>Поиск студента</label>
+          <div class="target-switch">
+            <button
+              class="target-switch__item"
+              :class="{ active: targetMode === 'student' }"
+              type="button"
+              @click="setTargetMode('student')"
+            >
+              Студент
+            </button>
+
+            <button
+              class="target-switch__item"
+              :class="{ active: targetMode === 'room' }"
+              type="button"
+              @click="setTargetMode('room')"
+            >
+              Комната
+            </button>
+          </div>
+
+          <label>
+            {{ targetMode === 'student' ? 'Поиск студента' : 'Поиск комнаты' }}
+          </label>
           <input
             v-model="targetQuery"
-            placeholder="Имя, email, Uni ID или комната"
+            :placeholder="
+              targetMode === 'student'
+                ? 'Имя, email, Uni ID или комната'
+                : 'Комната, имя жильца, email или Uni ID'
+            "
           />
 
-          <label>Студент</label>
-          <select v-model="form.user_id">
-            <option value="">Выберите студента</option>
-            <option
-              v-for="target in filteredTargets"
-              :key="target.settlement_id"
-              :value="target.user?.id || ''"
-            >
-              {{
-                `${target.user?.full_name || 'Без имени'} • ${target.room.label} • ${target.user?.uni_id || 'без ID'}`
-              }}
-            </option>
-          </select>
+          <template v-if="targetMode === 'student'">
+            <label>Студент</label>
+            <select v-model="form.user_id">
+              <option value="">Выберите студента</option>
+              <option
+                v-for="target in filteredTargets"
+                :key="target.settlement_id"
+                :value="target.user?.id || ''"
+              >
+                {{
+                  `${target.user?.full_name || 'Без имени'} • ${target.room.label} • ${target.user?.uni_id || 'без ID'}`
+                }}
+              </option>
+            </select>
 
-          <div v-if="selectedTarget" class="selection-note">
-            {{ selectedTarget.user?.email }} • {{ selectedTarget.room.label }}
-          </div>
+            <div v-if="selectedTarget" class="selection-note">
+              {{ selectedTarget.user?.email }} • {{ selectedTarget.room.label }}
+            </div>
+          </template>
+
+          <template v-else>
+            <label>Комната</label>
+            <select v-model="form.room_id">
+              <option value="">Выберите комнату</option>
+              <option
+                v-for="target in filteredRoomTargets"
+                :key="target.room_id"
+                :value="target.room_id"
+              >
+                {{
+                  `${target.room.label} • ${target.active_residents_count} ${
+                    target.active_residents_count === 1 ? 'житель' : 'жителя'
+                  }`
+                }}
+              </option>
+            </select>
+
+            <div v-if="selectedRoomTarget" class="selection-note room-selection">
+              <strong>
+                В комнате проживают: {{ selectedRoomTarget.active_residents_count }}
+              </strong>
+              <span>
+                {{
+                  selectedRoomTarget.residents
+                    .map((resident) => resident.full_name)
+                    .join(', ')
+                }}
+              </span>
+            </div>
+          </template>
 
           <label>Правило штрафа</label>
           <select v-model="form.rule_id">
@@ -313,6 +424,29 @@ onMounted(loadOptions)
   padding: 24px;
 }
 
+.target-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.target-switch__item {
+  height: 46px;
+  border: 1px solid #dbe5f0;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.target-switch__item.active {
+  background: #172033;
+  border-color: #172033;
+  color: #ffffff;
+}
+
 .form label {
   font-size: 12px;
   color: #6b7280;
@@ -352,6 +486,12 @@ onMounted(loadOptions)
   border-radius: 14px;
   padding: 12px 14px;
   color: #9a3412;
+}
+
+.room-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .file-list {
