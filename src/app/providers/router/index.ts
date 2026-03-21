@@ -78,6 +78,21 @@ export const router = createRouter({
           name: 'penalty',
           component: () => import('@/roles/student/pages/penalty/index.vue'),
         },
+        {
+          path: 'buysell',
+          name: 'buysell',
+          component: () => import('@/roles/student/pages/buysell/index.vue'),
+        },
+        {
+          path: 'buysell/my',
+          name: 'buysell-my',
+          component: () => import('@/roles/student/pages/buysell/ManagePage.vue'),
+        },
+        {
+          path: 'buysell/:id',
+          name: 'buysell-detail',
+          component: () => import('@/roles/student/pages/buysell/DetailPage.vue'),
+        },
       ],
     },
     {

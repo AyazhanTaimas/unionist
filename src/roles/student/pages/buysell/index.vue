@@ -1,24 +1,71 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { buySellCategories, buySellListings, formatListingPrice, type BuySellFilterCategory } from './model'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { getBuySellListings, getBuySellMeta, type BuySellListing, type BuySellOption } from './api'
+import { formatListingDate, formatListingPrice, getListingCoverStyle, getListingSellerName } from './model'
 
+const router = useRouter()
+
+const loading = ref(true)
+const error = ref<string | null>(null)
 const searchTerm = ref('')
-const selectedCategory = ref<BuySellFilterCategory>('Все')
+const selectedCategory = ref('all')
+const listings = ref<BuySellListing[]>([])
+const categories = ref<BuySellOption[]>([])
+
+const filterCategories = computed(() => [
+  { value: 'all', label: 'Все' },
+  ...categories.value,
+])
 
 const filteredListings = computed(() => {
   const query = searchTerm.value.trim().toLowerCase()
 
-  return buySellListings.filter((listing) => {
+  return listings.value.filter((listing) => {
     const matchesCategory =
-      selectedCategory.value === 'Все' || listing.category === selectedCategory.value
+      selectedCategory.value === 'all' || listing.category === selectedCategory.value
+
     const matchesQuery =
       !query ||
       listing.title.toLowerCase().includes(query) ||
-      listing.seller.toLowerCase().includes(query) ||
-      listing.description.toLowerCase().includes(query)
+      listing.description.toLowerCase().includes(query) ||
+      getListingSellerName(listing).toLowerCase().includes(query)
 
     return matchesCategory && matchesQuery
   })
+})
+
+async function loadCatalog() {
+  loading.value = true
+  error.value = null
+
+  try {
+    const [meta, catalog] = await Promise.all([
+      getBuySellMeta(),
+      getBuySellListings({ limit: 60 }),
+    ])
+
+    categories.value = meta.categories
+    listings.value = catalog
+  } catch (e) {
+    console.error(e)
+    error.value = 'Не удалось загрузить объявления'
+    listings.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+function openMyListings() {
+  router.push({ name: 'buysell-my' })
+}
+
+function openCreateListing() {
+  router.push({ name: 'buysell-my', query: { create: '1' } })
+}
+
+onMounted(() => {
+  loadCatalog()
 })
 </script>
 
@@ -26,15 +73,18 @@ const filteredListings = computed(() => {
   <div class="buysell-page">
     <section class="market-shell">
       <div class="market-topbar">
-        <div>
+        <div class="topbar-copy">
           <div class="eyebrow">Campus market</div>
           <h1>Купи-продай</h1>
-          <p>Полный список объявлений для студентов: учебники, техника и полезные вещи по общежитию.</p>
+          <p>
+            Полный список объявлений для студентов: учебники, техника и полезные вещи
+            для жизни в общежитии.
+          </p>
         </div>
 
         <div class="topbar-actions">
-          <button class="outline-btn">Мои товары</button>
-          <button class="primary-btn">Разместить</button>
+          <button class="outline-btn" @click="openMyListings">Мои товары</button>
+          <button class="primary-btn" @click="openCreateListing">Разместить</button>
         </div>
       </div>
 
@@ -53,13 +103,13 @@ const filteredListings = computed(() => {
 
         <div class="category-row">
           <button
-            v-for="category in buySellCategories"
-            :key="category"
+            v-for="category in filterCategories"
+            :key="category.value"
             class="category-chip"
-            :class="{ 'category-chip--active': selectedCategory === category }"
-            @click="selectedCategory = category"
+            :class="{ 'category-chip--active': selectedCategory === category.value }"
+            @click="selectedCategory = category.value"
           >
-            {{ category }}
+            {{ category.label }}
           </button>
         </div>
       </div>
@@ -70,31 +120,43 @@ const filteredListings = computed(() => {
             <div class="panel-kicker">Каталог</div>
             <strong>{{ filteredListings.length }} объявлений</strong>
           </div>
-          <span class="catalog-note">Нажмите на карточку, чтобы открыть отдельную страницу товара</span>
+          <span class="catalog-note">Нажмите на карточку, чтобы открыть страницу товара</span>
         </div>
 
-        <div v-if="filteredListings.length" class="listing-grid">
+        <div v-if="loading" class="empty-state">
+          <strong>Загрузка объявлений...</strong>
+        </div>
+
+        <div v-else-if="error" class="empty-state">
+          <strong>{{ error }}</strong>
+          <button class="outline-btn" @click="loadCatalog">Повторить</button>
+        </div>
+
+        <div v-else-if="filteredListings.length" class="listing-grid">
           <RouterLink
             v-for="listing in filteredListings"
             :key="listing.id"
             :to="{ name: 'buysell-detail', params: { id: listing.id } }"
             class="listing-card"
           >
-            <div
-              class="listing-cover"
-              :style="{ backgroundImage: `${listing.accent}, url(${listing.images[0]})` }"
-            />
+            <div class="listing-cover" :style="getListingCoverStyle(listing)" />
+
             <div class="listing-copy">
               <div class="listing-meta">
-                <span>{{ listing.category }}</span>
-                <span>{{ listing.condition }}</span>
+                <span>{{ listing.category_label }}</span>
+                <span>{{ listing.condition_label }}</span>
               </div>
+
               <h2>{{ listing.title }}</h2>
               <div class="listing-price">{{ formatListingPrice(listing.price) }}</div>
               <p>{{ listing.description }}</p>
+
               <div class="listing-footer">
-                <strong>{{ listing.seller }}</strong>
-                <span>{{ listing.location }}</span>
+                <div>
+                  <strong>{{ getListingSellerName(listing) }}</strong>
+                  <span>{{ listing.pickup_location || 'Самовывоз из общежития' }}</span>
+                </div>
+                <time v-if="listing.created_at">{{ formatListingDate(listing.created_at) }}</time>
               </div>
             </div>
           </RouterLink>
@@ -102,7 +164,7 @@ const filteredListings = computed(() => {
 
         <div v-else class="empty-state">
           <strong>Ничего не найдено</strong>
-          <p>Попробуйте другой запрос или переключите категорию.</p>
+          <p>Попробуйте изменить запрос или выбрать другую категорию.</p>
         </div>
       </section>
     </section>
@@ -127,11 +189,17 @@ const filteredListings = computed(() => {
   box-shadow: 0 24px 52px rgba(52, 64, 119, 0.12);
 }
 
-.market-topbar {
+.market-topbar,
+.catalog-head,
+.listing-footer {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
+}
+
+.topbar-copy {
+  max-width: 760px;
 }
 
 .eyebrow,
@@ -150,18 +218,21 @@ const filteredListings = computed(() => {
   color: #0f172a;
 }
 
-.market-topbar p {
-  margin: 0;
-  max-width: 720px;
+.market-topbar p,
+.catalog-note,
+.listing-copy p,
+.listing-footer span,
+.empty-state p {
   color: #5b6785;
   line-height: 1.7;
 }
 
-.topbar-actions {
+.topbar-actions,
+.market-toolbar,
+.category-row {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  justify-content: flex-end;
 }
 
 button {
@@ -190,20 +261,13 @@ button:hover,
 
 .outline-btn {
   color: #2b3561;
-  background: rgba(238, 242, 255, 0.9);
+  background: rgba(238, 242, 255, 0.92);
 }
 
 .primary-btn {
   color: #fff;
   background: linear-gradient(135deg, #4f46e5, #2563eb);
   box-shadow: 0 14px 28px rgba(79, 70, 229, 0.22);
-}
-
-.market-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
 }
 
 .search-box {
@@ -216,7 +280,7 @@ button:hover,
   height: 52px;
   border-radius: 18px;
   border: 1px solid rgba(179, 191, 229, 0.46);
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.86);
 }
 
 .search-box input {
@@ -228,24 +292,10 @@ button:hover,
   color: #1f2a44;
 }
 
-.search-box input::placeholder {
-  color: #94a3b8;
-}
-
-.search-icon {
-  display: inline-flex;
-  color: #8090b2;
-}
-
 .search-icon svg {
   width: 18px;
   height: 18px;
-}
-
-.category-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  color: #8090b2;
 }
 
 .category-chip {
@@ -263,64 +313,45 @@ button:hover,
 .catalog-panel {
   border-radius: 28px;
   border: 1px solid rgba(183, 194, 228, 0.42);
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 18px 40px rgba(57, 69, 119, 0.08);
   padding: 20px;
 }
 
-.catalog-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-.catalog-head strong {
-  display: block;
-  margin-top: 6px;
-  color: #101827;
-  font-size: 1.3rem;
-}
-
-.catalog-note {
-  color: #8090b2;
-  font-size: 0.92rem;
-}
-
 .listing-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 18px;
 }
 
 .listing-card {
   display: grid;
-  overflow: hidden;
+  gap: 16px;
+  padding: 14px;
   border-radius: 24px;
-  border: 1px solid rgba(203, 213, 225, 0.72);
+  border: 1px solid rgba(206, 215, 237, 0.52);
   background: #fff;
-  color: inherit;
   text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  color: inherit;
+  box-shadow: 0 18px 32px rgba(57, 69, 119, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .listing-card:hover {
-  border-color: rgba(79, 70, 229, 0.48);
-  box-shadow: 0 16px 34px rgba(79, 70, 229, 0.16);
+  box-shadow: 0 20px 40px rgba(57, 69, 119, 0.12);
 }
 
 .listing-cover {
-  aspect-ratio: 1.35;
+  min-height: 210px;
+  border-radius: 20px;
   background-size: cover;
   background-position: center;
-  background-blend-mode: multiply;
 }
 
 .listing-copy {
   display: grid;
   gap: 10px;
-  padding: 16px;
 }
 
 .listing-meta {
@@ -329,126 +360,77 @@ button:hover,
   flex-wrap: wrap;
 }
 
-.listing-meta span {
-  padding: 6px 10px;
+.listing-meta span,
+.listing-footer time {
+  padding: 8px 10px;
   border-radius: 999px;
-  background: #f1f5ff;
-  color: #61708f;
-  font-size: 0.75rem;
-  font-weight: 700;
+  background: #eef2ff;
+  color: #465377;
+  font-size: 0.84rem;
+  font-weight: 600;
 }
 
 .listing-copy h2 {
   margin: 0;
-  font-size: 1.18rem;
-  color: #111827;
+  font-size: 1.1rem;
+  color: #0f172a;
 }
 
 .listing-price {
-  color: #1d4ed8;
-  font-size: 1.35rem;
+  font-size: 1.4rem;
   font-weight: 800;
+  color: #1d4ed8;
 }
 
 .listing-copy p {
   margin: 0;
-  color: #5d6781;
-  line-height: 1.65;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .listing-footer {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  color: #7a879f;
-  font-size: 0.9rem;
 }
 
 .listing-footer strong {
-  color: #23304b;
+  display: block;
+  color: #1f2a44;
 }
 
 .empty-state {
-  border-radius: 24px;
-  padding: 28px;
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-height: 220px;
   text-align: center;
-  background: linear-gradient(180deg, #f8fbff, #eff4ff);
-  color: #5f6d8a;
+  padding: 24px;
 }
 
-.empty-state strong {
-  display: block;
-  color: #0f172a;
-  font-size: 1.1rem;
-}
-
-.empty-state p {
-  margin: 10px 0 0;
-}
-
-@media (max-width: 980px) {
+@media (max-width: 768px) {
   .market-shell {
-    padding: 22px;
-    border-radius: 28px;
-  }
-
-  .market-topbar {
-    flex-direction: column;
-  }
-
-  .topbar-actions {
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 720px) {
-  .market-shell,
-  .catalog-panel {
-    padding: 18px;
+    padding: 20px;
     border-radius: 24px;
   }
 
-  .market-toolbar {
-    align-items: stretch;
-  }
-
-  .search-box {
-    min-width: 0;
-    flex-basis: 100%;
-  }
-
-  .topbar-actions,
-  .category-row {
-    width: 100%;
-  }
-
-  .outline-btn,
-  .primary-btn,
-  .category-chip {
-    flex: 1 1 calc(50% - 6px);
-    justify-content: center;
-  }
-
+  .market-topbar,
   .catalog-head,
   .listing-footer {
     flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-@media (max-width: 540px) {
-  .buysell-page {
-    font-size: 15px;
+    align-items: stretch;
   }
 
-  .market-shell {
-    gap: 18px;
-    padding: 16px;
+  .topbar-actions {
+    width: 100%;
   }
 
-  .listing-card {
-    border-radius: 20px;
+  .topbar-actions button {
+    flex: 1;
+  }
+
+  .listing-cover {
+    min-height: 180px;
   }
 }
 </style>
