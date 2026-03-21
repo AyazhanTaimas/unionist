@@ -147,90 +147,92 @@ onMounted(loadOptions)
         <button class="close-btn" @click="emit('close')">✕</button>
       </div>
 
-      <div v-if="loading" class="state-box">
-        Загрузка формы...
-      </div>
-
-      <div v-else-if="loadError" class="state-box state-box--error">
-        {{ loadError }}
-      </div>
-
-      <div v-else class="form">
-        <label>Поиск студента</label>
-        <input
-          v-model="targetQuery"
-          placeholder="Имя, email, Uni ID или комната"
-        />
-
-        <label>Студент</label>
-        <select v-model="form.user_id">
-          <option value="">Выберите студента</option>
-          <option
-            v-for="target in filteredTargets"
-            :key="target.settlement_id"
-            :value="target.user?.id || ''"
-          >
-            {{
-              `${target.user?.full_name || 'Без имени'} • ${target.room.label} • ${target.user?.uni_id || 'без ID'}`
-            }}
-          </option>
-        </select>
-
-        <div v-if="selectedTarget" class="selection-note">
-          {{ selectedTarget.user?.email }} • {{ selectedTarget.room.label }}
+      <div class="modal-content">
+        <div v-if="loading" class="state-box">
+          Загрузка формы...
         </div>
 
-        <label>Правило штрафа</label>
-        <select v-model="form.rule_id">
-          <option value="">Выберите правило</option>
-          <option v-for="rule in rules" :key="rule.id" :value="rule.id">
-            {{ `${rule.code} • ${rule.title}` }}
-          </option>
-        </select>
-
-        <div v-if="selectedRule" class="selection-note">
-          По умолчанию: {{ selectedRule.default_points }} баллов
-          <span v-if="selectedRule.redeemable">• допускает отработку</span>
-          <span v-if="selectedRule.creates_financial_charge">
-            • создаст финансовое начисление
-          </span>
+        <div v-else-if="loadError" class="state-box state-box--error">
+          {{ loadError }}
         </div>
 
-        <label>Баллы</label>
-        <input
-          v-model="form.points"
-          type="number"
-          min="1"
-          placeholder="Оставьте пустым, чтобы взять значение из правила"
-        />
+        <div v-else class="form">
+          <label>Поиск студента</label>
+          <input
+            v-model="targetQuery"
+            placeholder="Имя, email, Uni ID или комната"
+          />
 
-        <label>Описание</label>
-        <textarea
-          v-model="form.description"
-          placeholder="Контекст нарушения, обстоятельства, дополнительные детали"
-        />
+          <label>Студент</label>
+          <select v-model="form.user_id">
+            <option value="">Выберите студента</option>
+            <option
+              v-for="target in filteredTargets"
+              :key="target.settlement_id"
+              :value="target.user?.id || ''"
+            >
+              {{
+                `${target.user?.full_name || 'Без имени'} • ${target.room.label} • ${target.user?.uni_id || 'без ID'}`
+              }}
+            </option>
+          </select>
 
-        <label>Фото / доказательства</label>
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          @change="handleFileChange"
-        />
-
-        <p class="helper-text">
-          Можно прикрепить несколько изображений. Файлы будут загружены в backend,
-          а в БД сохранится путь к каждому изображению.
-        </p>
-
-        <div v-if="selectedFiles.length" class="file-list">
-          <div v-for="file in selectedFiles" :key="file.name + file.size" class="file-chip">
-            {{ file.name }}
+          <div v-if="selectedTarget" class="selection-note">
+            {{ selectedTarget.user?.email }} • {{ selectedTarget.room.label }}
           </div>
-        </div>
 
-        <div v-if="formError" class="form-error">
-          {{ formError }}
+          <label>Правило штрафа</label>
+          <select v-model="form.rule_id">
+            <option value="">Выберите правило</option>
+            <option v-for="rule in rules" :key="rule.id" :value="rule.id">
+              {{ `${rule.code} • ${rule.title}` }}
+            </option>
+          </select>
+
+          <div v-if="selectedRule" class="selection-note">
+            По умолчанию: {{ selectedRule.default_points }} баллов
+            <span v-if="selectedRule.redeemable">• допускает отработку</span>
+            <span v-if="selectedRule.creates_financial_charge">
+              • создаст финансовое начисление
+            </span>
+          </div>
+
+          <label>Баллы</label>
+          <input
+            v-model="form.points"
+            type="number"
+            min="1"
+            placeholder="Оставьте пустым, чтобы взять значение из правила"
+          />
+
+          <label>Описание</label>
+          <textarea
+            v-model="form.description"
+            placeholder="Контекст нарушения, обстоятельства, дополнительные детали"
+          />
+
+          <label>Фото / доказательства</label>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            @change="handleFileChange"
+          />
+
+          <p class="helper-text">
+            Можно прикрепить несколько изображений. Файлы будут загружены в backend,
+            а в БД сохранится путь к каждому изображению.
+          </p>
+
+          <div v-if="selectedFiles.length" class="file-list">
+            <div v-for="file in selectedFiles" :key="file.name + file.size" class="file-chip">
+              {{ file.name }}
+            </div>
+          </div>
+
+          <div v-if="formError" class="form-error">
+            {{ formError }}
+          </div>
         </div>
       </div>
 
@@ -259,10 +261,20 @@ onMounted(loadOptions)
 
 .modal {
   width: min(640px, 100%);
+  max-height: calc(100dvh - 40px);
   background: #ffffff;
   border-radius: 28px;
   overflow: hidden;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modal-header {
@@ -271,6 +283,7 @@ onMounted(loadOptions)
   display: flex;
   justify-content: space-between;
   gap: 16px;
+  flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -382,6 +395,8 @@ onMounted(loadOptions)
   gap: 12px;
   padding: 20px 24px 24px;
   border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+  flex-shrink: 0;
 }
 
 .cancel-btn,
@@ -410,9 +425,21 @@ onMounted(loadOptions)
 }
 
 @media (max-width: 720px) {
+  .overlay {
+    padding: 12px;
+  }
+
+  .modal {
+    max-height: calc(100dvh - 24px);
+  }
+
   .modal-header,
   .actions {
     flex-direction: column;
+  }
+
+  .form {
+    padding: 20px;
   }
 }
 </style>
