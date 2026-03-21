@@ -1,6 +1,6 @@
 export interface ManagerUser {
   id: number
-  role: 'admin' | 'student' | 'manager' | 'employee' | string
+  role: 'admin' | 'student' | 'manager' | 'dorm-admin' | 'employee' | string
   email: string
   phone_number: string
   lastname: string

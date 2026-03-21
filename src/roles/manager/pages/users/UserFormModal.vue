@@ -177,6 +177,7 @@ const submit = async () => {
           <select v-model="form.role">
             <option value="student">student</option>
             <option value="manager">manager</option>
+            <option value="dorm-admin">dorm-admin</option>
             <option value="employee">employee</option>
             <option value="admin">admin</option>
           </select>

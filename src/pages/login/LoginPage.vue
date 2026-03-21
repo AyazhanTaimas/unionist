@@ -39,6 +39,8 @@ const handleLogin = async () => {
       router.push('/manager')
     } else if (role === 'admin') {
       router.push('/manager')
+    } else if (role === 'dorm-admin') {
+      router.push('/dorm-admin/news')
     } else if (role === 'employee') {
       router.push('/employee/news')
     } else {

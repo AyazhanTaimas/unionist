@@ -38,7 +38,7 @@ const stats = computed(() => ({
   total: users.value.length,
   students: users.value.filter((user) => user.role === 'student').length,
   managers: users.value.filter((user) => user.role === 'manager').length,
-  staff: users.value.filter((user) => ['admin', 'employee'].includes(user.role)).length,
+  staff: users.value.filter((user) => ['admin', 'dorm-admin', 'employee'].includes(user.role)).length,
 }))
 
 const fetchUsers = async () => {

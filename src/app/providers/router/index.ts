@@ -2,13 +2,19 @@ import { createRouter, createWebHistory } from 'vue-router'
 import StudentLayout from '@/roles/student/widgets/layout/ui/MainLayout.vue'
 import ManagerLayout from '@/roles/manager/widgets/layout/ui/MainLayout.vue'
 import LoginPage from '@/pages/login/LoginPage.vue'
+import DormAdminLayout from '@/roles/dorm-admin/widgets/layout/ui/MainLayout.vue'
 import EmployeeLayout from '@/roles/employee/widgets/layout/ui/MainLayout.vue'
 
-type AppRole = 'student' | 'manager' | 'admin' | 'employee' | null
+type AppRole = 'student' | 'manager' | 'admin' | 'dorm-admin' | 'employee' | null
 
 function normalizeRole(role: string | null): AppRole {
-  if (role === 'dorm-admin') return 'employee'
-  if (role === 'student' || role === 'manager' || role === 'admin' || role === 'employee') {
+  if (
+    role === 'student' ||
+    role === 'manager' ||
+    role === 'admin' ||
+    role === 'dorm-admin' ||
+    role === 'employee'
+  ) {
     return role
   }
 
@@ -17,6 +23,7 @@ function normalizeRole(role: string | null): AppRole {
 
 function getDefaultRouteForRole(role: AppRole): string {
   if (role === 'manager' || role === 'admin') return '/manager'
+  if (role === 'dorm-admin') return '/dorm-admin/news'
   if (role === 'employee') return '/employee/news'
   return '/news'
 }
@@ -168,6 +175,10 @@ export const router = createRouter({
           component: () => import('@/roles/employee/pages/news/NewsPage.vue'),
         },
         {
+          path: 'penalties',
+          redirect: '/employee/news',
+        },
+        {
           path: 'repairs',
           name: 'employee-repairs',
           component: () => import('@/roles/employee/pages/repairs/RepairsPage.vue'),
@@ -176,13 +187,28 @@ export const router = createRouter({
     },
     {
       path: '/dorm-admin',
-      redirect: '/employee/news',
+      component: DormAdminLayout,
+      children: [
+        {
+          path: '',
+          redirect: '/dorm-admin/news',
+        },
+        {
+          path: 'news',
+          name: 'dorm-admin-news',
+          component: () => import('@/roles/dorm-admin/pages/news/NewsPage.vue'),
+        },
+        {
+          path: 'penalties',
+          name: 'dorm-admin-penalties',
+          component: () => import('@/roles/dorm-admin/pages/penalty/Penalty.vue'),
+        },
+        {
+          path: 'repairs',
+          redirect: '/dorm-admin/news',
+        },
+      ],
     },
-    {
-      path: '/dorm-admin/:pathMatch(.*)*',
-      redirect: '/employee/news',
-    },
-
 
   ],
 })
@@ -216,7 +242,15 @@ router.beforeEach(async (to) => {
     return true
   }
 
-  if (role === 'manager' || role === 'admin' || role === 'employee') {
+  if (to.path.startsWith('/dorm-admin')) {
+    if (role !== 'dorm-admin' && role !== 'admin') {
+      return { path: getDefaultRouteForRole(role) }
+    }
+
+    return true
+  }
+
+  if (role === 'manager' || role === 'admin' || role === 'dorm-admin' || role === 'employee') {
     return { path: getDefaultRouteForRole(role) }
   }
 
