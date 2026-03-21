@@ -4,6 +4,23 @@ import ManagerLayout from '@/roles/manager/widgets/layout/ui/MainLayout.vue'
 import LoginPage from '@/pages/login/LoginPage.vue'
 import DormAdminLayout from '@/roles/dorm-admin/widgets/layout/ui/MainLayout.vue' 
 
+type AppRole = 'student' | 'manager' | 'admin' | 'dorm-admin' | null
+
+function normalizeRole(role: string | null): AppRole {
+  if (role === 'employee') return 'dorm-admin'
+  if (role === 'student' || role === 'manager' || role === 'admin' || role === 'dorm-admin') {
+    return role
+  }
+
+  return null
+}
+
+function getDefaultRouteForRole(role: AppRole): string {
+  if (role === 'manager' || role === 'admin') return '/manager'
+  if (role === 'dorm-admin') return '/dorm-admin/news'
+  return '/news'
+}
+
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -157,34 +174,38 @@ export const router = createRouter({
   ],
 })
 
-// router.beforeEach(async (to) => {
-//   const token = localStorage.getItem('token')
-//   const role = localStorage.getItem('role')
+router.beforeEach(async (to) => {
+  const token = localStorage.getItem('token')
+  const role = normalizeRole(localStorage.getItem('role'))
 
-//   if (to.path === '/login') return true
+  if (to.path === '/login') {
+    if (!token) return true
+    return { path: getDefaultRouteForRole(role) }
+  }
 
-//   if (!token) {
-//     return { path: '/login' }
-//   }
+  if (!token) {
+    return { path: '/login' }
+  }
 
-//   // 🔥 dorm-admin доступ
-//   if (to.path.startsWith('/dorm-admin') && role !== 'dorm-admin') {
-//     return { path: '/news' }
-//   }
+  if (to.path.startsWith('/manager')) {
+    if (role !== 'manager' && role !== 'admin') {
+      return { path: getDefaultRouteForRole(role) }
+    }
 
-//   // 🔥 manager доступ
-//   if (to.path.startsWith('/manager') && role !== 'manager') {
-//     return { path: '/news' }
-//   }
+    return true
+  }
 
-//   // 🔥 редиректы по ролям
-//   if (role === 'manager' && !to.path.startsWith('/manager')) {
-//     return { path: '/manager' }
-//   }
+  if (to.path.startsWith('/dorm-admin')) {
+    if (role !== 'dorm-admin') {
+      return { path: getDefaultRouteForRole(role) }
+    }
 
-//   if (role === 'dorm-admin' && !to.path.startsWith('/dorm-admin')) {
-//     return { path: '/dorm-admin/news' }
-//   }
+    return true
+  }
 
-//   return true
-// })
+  if (role === 'manager' || role === 'admin' || role === 'dorm-admin') {
+    return { path: getDefaultRouteForRole(role) }
+  }
+
+  return true
+})

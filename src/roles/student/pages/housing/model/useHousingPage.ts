@@ -1,4 +1,5 @@
 import { ref, computed, watch, onMounted } from 'vue'
+import { api } from '@/api/instance'
 import { getBuildings, getFloors, getRooms } from '../housingApi'
 import { createLiveRequest } from '../request/requestApi'
 import { createChangeRoomRequest } from '../changeRoomApi'
@@ -94,6 +95,34 @@ export function useHousingPage() {
     return Number.isNaN(id) ? null : id
   }
 
+  async function resolveUserId(): Promise<number | null> {
+    const storedUserId = getUserId()
+
+    if (storedUserId) {
+      return storedUserId
+    }
+
+    try {
+      const { data } = await api.get('/me')
+      const user = data?.data
+
+      if (!user?.id) {
+        return null
+      }
+
+      localStorage.setItem('user', JSON.stringify(user))
+      localStorage.setItem('user_id', String(user.id))
+
+      if (user.role) {
+        localStorage.setItem('role', user.role === 'employee' ? 'dorm-admin' : user.role)
+      }
+
+      return Number(user.id)
+    } catch {
+      return null
+    }
+  }
+
   function resetSelection() {
     selectedBuildingId.value = null
     selectedFloorId.value = null
@@ -153,7 +182,7 @@ export function useHousingPage() {
   }
 
   async function loadStatus() {
-    const userId = getUserId()
+    const userId = await resolveUserId()
 
     if (!userId) {
       currentResidence.value = null
