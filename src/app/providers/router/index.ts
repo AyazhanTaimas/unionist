@@ -81,6 +81,11 @@ export const router = createRouter({
           component: () => import('@/roles/student/pages/myrequest/index.vue'),
         },
         {
+          path: 'repairs',
+          name: 'repairs',
+          component: () => import('@/roles/student/pages/repairs/RepairsPage.vue'),
+        },
+        {
           path: 'finance',
           name: 'finance',
           component: () => import('@/roles/student/pages/finance/FinancePage.vue'),
@@ -166,6 +171,11 @@ export const router = createRouter({
       path: 'penalties',
       name: 'dorm-admin-penalties',
       component: () => import('@/roles/dorm-admin/pages/penalty/Penalty.vue'),
+    },
+    {
+      path: 'repairs',
+      name: 'dorm-admin-repairs',
+      component: () => import('@/roles/dorm-admin/pages/repairs/RepairsPage.vue'),
     },
   ],
 },

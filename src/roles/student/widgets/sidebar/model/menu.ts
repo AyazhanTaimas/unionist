@@ -11,6 +11,7 @@ export const studentMenu: SidebarItem[] = [
     {label: 'Главная', route: '/news', icon: HomeIcon},
     {label: 'Проживание', route: '/housing', icon: HousingIcon},
     {label: 'Мои запросы', route: '/myrequest', icon: RequestIcon},
+    {label: 'Ремонт', route: '/repairs', icon: PenaltyIcon},
     {label: 'Финансовый кабинет', route: '/finance', icon: FinanceIcon},
     {label: 'Штрафы', route: '/penalty', icon: PenaltyIcon},
     {label: 'Запись в тренажерный зал', route: '/gym', icon:GymIcon},
