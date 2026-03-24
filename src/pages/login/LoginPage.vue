@@ -44,7 +44,7 @@ const handleLogin = async () => {
     } else if (role === 'employee') {
       router.push('/employee/news')
     } else {
-      router.push({ name: 'news' })
+      router.push('/news')
     }
   } catch (e: any) {
     error.value = 'Invalid email or password'

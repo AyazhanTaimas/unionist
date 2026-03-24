@@ -57,18 +57,12 @@ export const router = createRouter({
       component: () => import('@/roles/student/pages/finance/PaymentCancel.vue'),
     },
     {
-      path: '/news',
-      name: 'news',
-      component: () => import('@/roles/student/pages/news/ui/NewsPage.vue'),
-    },
-
-    {
       path: '/',
       component: StudentLayout,
       children: [
         {
-          path: '/news',
-          name: 'news',
+          path: 'news',
+          name: 'student-news',
           component: () => import('@/roles/student/pages/news/ui/NewsPage.vue'),
         },
         {
