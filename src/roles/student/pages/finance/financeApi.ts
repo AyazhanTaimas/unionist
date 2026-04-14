@@ -25,3 +25,22 @@ export async function openCheckout(chargeId: number): Promise<string | null> {
     null
   )
 }
+
+export interface CheckoutConfirmationPayload {
+  confirmed: boolean
+  charge_id: number
+  charge_status: string
+  payment_status: string
+  stripe_payment_status?: string
+  stripe_session_status?: string
+}
+
+export async function confirmCheckoutSession(
+  sessionId: string
+): Promise<CheckoutConfirmationPayload | null> {
+  const { data } = await api.post('/finance/checkout/confirm', {
+    session_id: sessionId,
+  })
+
+  return data?.data ?? data ?? null
+}

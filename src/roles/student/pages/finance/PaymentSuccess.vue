@@ -21,6 +21,18 @@
         Спасибо за оплату.
       </p>
 
+      <p v-if="confirming" class="status-note">
+        Проверяем статус платежа...
+      </p>
+
+      <p v-else-if="isConfirmed" class="status-note status-note--success">
+        Оплата подтверждена и обновлена в системе.
+      </p>
+
+      <p v-else-if="confirmationError" class="status-note status-note--error">
+        {{ confirmationError }}
+      </p>
+
       <div class="buttons">
         <button class="primary" @click="goFinance">
           Перейти к оплатам
@@ -35,9 +47,39 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { confirmCheckoutSession } from './financeApi'
 
+const route = useRoute()
 const router = useRouter()
+const confirming = ref(false)
+const confirmationError = ref<string | null>(null)
+const isConfirmed = ref(false)
+
+const sessionId = computed(() => {
+  const value = route.query.session_id
+  return typeof value === 'string' ? value : ''
+})
+
+async function confirmPayment() {
+  if (!sessionId.value) {
+    return
+  }
+
+  confirming.value = true
+  confirmationError.value = null
+
+  try {
+    const payload = await confirmCheckoutSession(sessionId.value)
+    isConfirmed.value = Boolean(payload?.confirmed)
+  } catch (error) {
+    console.error(error)
+    confirmationError.value = 'Не удалось подтвердить оплату автоматически. Попробуйте открыть раздел оплат ещё раз через несколько секунд.'
+  } finally {
+    confirming.value = false
+  }
+}
 
 function goFinance() {
   router.push('/finance')
@@ -46,6 +88,10 @@ function goFinance() {
 function goHome() {
   router.push('/')
 }
+
+onMounted(() => {
+  void confirmPayment()
+})
 </script>
 
 <style scoped>
@@ -102,6 +148,21 @@ h1 {
   margin-bottom: 30px;
   line-height: 1.6;
   font-size: 15px;
+}
+
+.status-note {
+  margin: -8px 0 24px;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.status-note--success {
+  color: #15803d;
+}
+
+.status-note--error {
+  color: #b91c1c;
 }
 
 .buttons {
