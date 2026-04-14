@@ -571,12 +571,12 @@ h1 {
 .request-list {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .request-card {
-  padding: 24px;
-  border-radius: 28px;
+  padding: 18px 20px;
+  border-radius: 24px;
 }
 
 .request-top {
@@ -587,15 +587,15 @@ h1 {
 }
 
 .request-top h2 {
-  margin: 0 0 8px;
-  font-size: 24px;
+  margin: 0 0 6px;
+  font-size: 22px;
   line-height: 1.15;
 }
 
 .meta-row {
   margin: 0;
   color: #68768b;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .dot {
@@ -604,9 +604,9 @@ h1 {
 
 .status-badge {
   flex-shrink: 0;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -631,25 +631,25 @@ h1 {
 }
 
 .stale-note {
-  margin-top: 16px;
-  padding: 14px 16px;
-  border-radius: 16px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
   background: #eff6ff;
   border: 1px solid #bfdbfe;
   color: #1d4ed8;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .details-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 18px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .detail-card {
-  padding: 16px 18px;
-  border-radius: 18px;
+  padding: 12px 14px;
+  border-radius: 16px;
   background: #f8fbff;
   border: 1px solid #e2ebf5;
 }
@@ -660,28 +660,28 @@ h1 {
 
 .detail-label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 12px;
+  margin-bottom: 6px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   color: #7a8799;
 }
 
 .detail-value {
   color: #172033;
-  line-height: 1.5;
+  line-height: 1.35;
 }
 
 .actions {
   display: flex;
-  gap: 12px;
-  margin-top: 20px;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .action-btn {
-  min-width: 148px;
-  padding: 12px 18px;
+  min-width: 138px;
+  padding: 10px 16px;
   border: none;
   border-radius: 14px;
   font-weight: 700;
@@ -701,6 +701,12 @@ h1 {
 .action-btn.reject {
   background: #fee2e2;
   color: #b91c1c;
+}
+
+@media (max-width: 1280px) {
+  .details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 960px) {
