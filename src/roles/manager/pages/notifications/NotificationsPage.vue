@@ -390,27 +390,15 @@ h1 {
 .notification-list {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  max-height: clamp(320px, 48vh, 560px);
-  overflow-y: auto;
-  padding-right: 6px;
-}
-
-.notification-list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.notification-list::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.65);
-}
-
-.notification-list::-webkit-scrollbar-track {
-  background: transparent;
+  gap: 14px;
 }
 
 .notification-card {
-  padding: 24px;
+  padding: 18px 20px;
+}
+
+.notification-card h2 {
+  font-size: 20px;
 }
 
 .notification-top {
@@ -421,10 +409,10 @@ h1 {
 }
 
 .notification-message {
-  margin: 14px 0 0;
+  margin: 10px 0 0;
   max-width: 80ch;
   color: #526075;
-  line-height: 1.65;
+  line-height: 1.55;
 }
 
 .notification-badge {
@@ -443,20 +431,20 @@ h1 {
 .meta-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 18px;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .meta-card {
-  padding: 16px 18px;
-  border-radius: 18px;
+  padding: 12px 14px;
+  border-radius: 16px;
   background: #f8fbff;
   border: 1px solid #e2ebf5;
 }
 
 .meta-value {
   display: block;
-  margin-top: 8px;
+  margin-top: 6px;
   color: #172033;
   line-height: 1.5;
 }
@@ -496,8 +484,7 @@ h1 {
   }
 
   .notification-list {
-    max-height: 420px;
-    padding-right: 2px;
+    gap: 12px;
   }
 }
 </style>
