@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import HousingResidenceView from './housingResidence.vue'
 import HousingSelectionForm from './housingSelectionForm.vue'
 import HousingEvictModal from './housingEvictModal.vue'
@@ -29,7 +30,7 @@ const {
   currentView,
   selectedBuilding,
   hasActiveResidence,
-  residenceTitle,
+  currentResidence,
   submitButtonText,
   closeSuccessModal,
   openChangeRoomMode,
@@ -42,21 +43,33 @@ const {
   setSelectedFloorId,
   setSelectedRoomId,
 } = useHousingPage()
+
+const showResidenceDashboard = computed(
+  () => hasActiveResidence.value && !isChangingRoom.value && !!currentResidence.value
+)
 </script>
 
 <template>
-  <div class="accommodation-page">
-    <div class="card-wrapper">
-      <div class="accent-line"></div>
+  <div
+    class="accommodation-page"
+    :class="{ 'accommodation-page--residence': showResidenceDashboard }"
+  >
+    <div
+      class="card-wrapper"
+      :class="{ 'card-wrapper--residence': showResidenceDashboard }"
+    >
+      <div v-if="!showResidenceDashboard" class="accent-line"></div>
 
-      <div class="card">
+      <div class="card" :class="{ 'card--residence': showResidenceDashboard }">
         <template v-if="loadingStatus">
           <div class="loading-box">Загрузка данных...</div>
         </template>
 
-        <template v-else-if="hasActiveResidence && !isChangingRoom">
+        <template v-else-if="showResidenceDashboard && currentResidence">
           <HousingResidenceView
-            :residence-title="residenceTitle"
+            :building-name="currentResidence.building_name"
+            :floor-number="currentResidence.floor_number"
+            :room-number="currentResidence.room_number"
             @change-room="openChangeRoomMode"
             @evict="openEvictModal"
           />
@@ -118,9 +131,32 @@ const {
   margin-top: 70px;
 }
 
+.accommodation-page--residence {
+  position: relative;
+  padding-bottom: 32px;
+}
+
+.accommodation-page--residence::before {
+  content: '';
+  position: absolute;
+  inset: -32px 0 auto;
+  height: 280px;
+  border-radius: 40px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 205, 84, 0.26), transparent 34%),
+    radial-gradient(circle at top left, rgba(70, 85, 255, 0.18), transparent 42%),
+    linear-gradient(135deg, rgba(18, 42, 74, 0.12), rgba(18, 42, 74, 0));
+  pointer-events: none;
+  filter: blur(2px);
+}
+
 .card-wrapper {
   position: relative;
   width: 100%;
+}
+
+.card-wrapper--residence {
+  isolation: isolate;
 }
 
 .accent-line {
@@ -143,6 +179,15 @@ const {
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
 }
 
+.card--residence {
+  margin-left: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .loading-box {
   margin-bottom: 18px;
   padding: 14px 16px;
@@ -152,11 +197,22 @@ const {
   color: #334155;
 }
 
+@media (max-width: 900px) {
+  .accommodation-page {
+    margin-top: 48px;
+  }
+}
+
 @media (max-width: 700px) {
   .card {
     margin-left: 0;
     padding: 18px;
     border-radius: 24px;
+  }
+
+  .card--residence {
+    padding: 0;
+    border-radius: 0;
   }
 
   .accent-line {
