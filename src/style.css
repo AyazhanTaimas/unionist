@@ -2,6 +2,8 @@
   font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  color: #172033;
+  background: #f3f4f6;
 
   /* color-scheme: light dark; */
   /* color: rgba(255, 255, 255, 0.87); */
@@ -11,6 +13,45 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #f3f4f6;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+textarea {
+  resize: vertical;
 }
 
 
@@ -65,4 +106,3 @@ button:focus-visible {
 /* body {
   font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 } */
-

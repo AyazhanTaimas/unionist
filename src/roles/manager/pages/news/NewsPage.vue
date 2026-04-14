@@ -171,4 +171,18 @@ onMounted(fetchNews)
   border-radius: 8px;
   cursor: pointer;
 }
+
+@media (max-width: 700px) {
+  .news-page {
+    padding: 0;
+  }
+
+  .header {
+    gap: 12px;
+  }
+
+  .news-card {
+    padding: 14px;
+  }
+}
 </style>

@@ -29,7 +29,9 @@ function goPrimary() {
 
 <style scoped>
 .cancel-page {
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 24px 16px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -41,7 +43,7 @@ function goPrimary() {
   padding: 40px;
   border-radius: 12px;
   text-align: center;
-  width: 420px;
+  width: min(420px, 100%);
 }
 
 .icon {
@@ -65,5 +67,15 @@ button {
   color: white;
   border-radius: 8px;
   cursor: pointer;
+}
+
+@media (max-width: 700px) {
+  .card {
+    padding: 28px 20px;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
 }
 </style>

@@ -8,9 +8,11 @@ import {
 } from '@/api/notifications'
 import BellIcon from './BellIcon.vue'
 import UserIcon from './UserIcon.vue'
+import HeaderLogo from './HeaderLogo.vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/api/instance'
 import { resetDormAccessState } from '@/roles/student/shared/lib/dormAccess'
+import { useAppShell } from '@/app/providers/layout/useAppShell'
 
 const router = useRouter()
 const notifications = ref<InboxNotificationItem[]>([])
@@ -18,6 +20,7 @@ const unreadCount = ref(0)
 const loadingNotifications = ref(false)
 const notificationsOpen = ref(false)
 const notificationsRoot = ref<HTMLElement | null>(null)
+const { isMobileViewport, toggleSidebar } = useAppShell()
 
 let refreshIntervalId: number | null = null
 
@@ -169,10 +172,24 @@ onUnmounted(() => {
 
 <template>
   <header class="header">
-    <!-- ЛЕВАЯ ЧАСТЬ (пусто или title позже) -->
-    <div />
+    <div class="header-start">
+      <button
+        v-if="isMobileViewport"
+        class="menu-toggle"
+        type="button"
+        aria-label="Открыть меню"
+        @click="toggleSidebar"
+      >
+        <span />
+        <span />
+        <span />
+      </button>
 
-    <!-- ПРАВО -->
+      <div v-if="isMobileViewport" class="mobile-brand">
+        <HeaderLogo />
+      </div>
+    </div>
+
     <div class="actions">
       <div ref="notificationsRoot" class="notifications-wrap">
         <button class="icon-btn" @click="toggleNotifications">
@@ -239,7 +256,7 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .header {
-  height: 64px;
+  min-height: 64px;
   padding: 0 24px;
 
   display: flex;
@@ -249,13 +266,21 @@ onUnmounted(() => {
   background: transparent;
 }
 
+.header-start {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .actions {
   display: flex;
   gap: 16px;
-  align-items: flex-start;
+  align-items: center;
 }
 
-.icon-btn {
+.icon-btn,
+.logout-btn,
+.menu-toggle {
   position: relative;
   width: 36px;
   height: 36px;
@@ -280,6 +305,23 @@ onUnmounted(() => {
     width: 22px;
     height: 22px;
   }
+}
+
+.menu-toggle {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.menu-toggle span {
+  width: 16px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.mobile-brand :deep(img) {
+  height: 34px;
 }
 
 .notifications-wrap {
@@ -412,33 +454,22 @@ onUnmounted(() => {
 }
 
 .logout-btn {
-  height: 20px;
-  padding: 4px;
-  border-radius: 10px;
-  border: none;
-  background: #eef2ff;
-  cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 8px;
-  color:#4f46e5
+  padding: 0;
+  color: #4f46e5;
 }
 
 .logout-btn img {
   width: 22px;
   height: 22px;
-  color:#4f46e5
 }
 
 .logout-btn:hover {
-  color: #e0e7ff;
+  background: #eef2ff;
 }
 
 @media (max-width: 700px) {
   .header {
-    padding: 0 12px;
+    padding: 8px 12px 0;
   }
 
   .actions {
@@ -446,7 +477,30 @@ onUnmounted(() => {
   }
 
   .notifications-panel {
-    right: -44px;
+    position: fixed;
+    top: 74px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+  }
+
+  .notifications-header {
+    flex-wrap: wrap;
+  }
+
+  .notification-item__top {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 520px) {
+  .mobile-brand :deep(img) {
+    height: 28px;
+  }
+
+  .actions {
+    gap: 8px;
   }
 }
 

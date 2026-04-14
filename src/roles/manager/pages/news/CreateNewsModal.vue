@@ -107,10 +107,11 @@ const submit = async () => {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 16px;
 }
 
 .modal {
-  width: 420px;
+  width: min(420px, 100%);
   background: white;
   padding: 24px;
   border-radius: 20px;
@@ -142,5 +143,20 @@ textarea {
   border: none;
   padding: 10px 16px;
   border-radius: 12px;
+}
+
+@media (max-width: 700px) {
+  .modal {
+    padding: 20px;
+    border-radius: 18px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions button {
+    width: 100%;
+  }
 }
 </style>

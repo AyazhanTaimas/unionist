@@ -110,4 +110,11 @@ const yandexMapSrc = computed(() => {
   opacity: 0;
   transform: scale(0.98);
 }
+
+@media (max-width: 700px) {
+  .image-wrapper iframe,
+  .image-wrapper img {
+    min-height: 280px;
+  }
+}
 </style>

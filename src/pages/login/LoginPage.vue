@@ -93,7 +93,9 @@ const handleLogin = async () => {
 
 <style scoped lang="scss">
 .login-page {
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 32px 20px;
   background: #dfe7e7;
   display: flex;
   flex-direction: column;
@@ -103,11 +105,11 @@ const handleLogin = async () => {
 }
 
 .logo {
-  width: 260px;
+  width: min(260px, 62vw);
 }
 
 .login-card {
-  width: 420px;
+  width: min(420px, 100%);
   background: #ffffff;
   padding: 40px;
   border-radius: 20px;
@@ -130,7 +132,7 @@ input {
   padding: 0 16px;
   background: #f3f4f6;
   font-size: 14px;
-  width: 90%;
+  width: 100%;
 }
 
 button {
@@ -160,5 +162,21 @@ button {
   color: red;
   font-size: 13px;
   text-align: center;
+}
+
+@media (max-width: 700px) {
+  .login-page {
+    gap: 28px;
+    padding: 24px 16px;
+  }
+
+  .login-card {
+    padding: 28px 20px;
+    border-radius: 18px;
+  }
+
+  .logo {
+    width: min(220px, 58vw);
+  }
 }
 </style>

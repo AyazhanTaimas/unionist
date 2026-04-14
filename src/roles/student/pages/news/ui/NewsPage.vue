@@ -76,4 +76,19 @@ onMounted(async () => {
 .news-list::-webkit-scrollbar-track {
   background: transparent;
 }
+
+@media (max-width: 700px) {
+  .news-page {
+    gap: 18px;
+  }
+
+  .page-title {
+    font-size: 26px;
+  }
+
+  .news-list {
+    padding-right: 0;
+    gap: 14px;
+  }
+}
 </style>

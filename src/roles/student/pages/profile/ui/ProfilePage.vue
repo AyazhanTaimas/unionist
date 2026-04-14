@@ -450,4 +450,69 @@ onUnmounted(() => {
   border-radius: 14px;
   font-weight: 600;
 }
+
+@media (max-width: 900px) {
+  .page {
+    padding: 20px;
+  }
+
+  .card {
+    padding: 24px;
+    border-radius: 28px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .btn.primary,
+  .btn.secondary {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .page {
+    padding: 0;
+  }
+
+  .card {
+    padding: 20px 16px;
+    border-radius: 24px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+  }
+
+  .modal__content {
+    padding: 24px 20px 28px;
+  }
+
+  .modal-field span {
+    font-size: 18px;
+  }
+
+  .toast {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+  }
+}
 </style>

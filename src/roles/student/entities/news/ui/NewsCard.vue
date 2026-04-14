@@ -55,4 +55,15 @@ const formatDate = (date: string) => {
   font-size: 12px;
   color: #9ca3af;
 }
+
+@media (max-width: 700px) {
+  .news-card {
+    padding: 16px 18px;
+    border-radius: 18px;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+}
 </style>

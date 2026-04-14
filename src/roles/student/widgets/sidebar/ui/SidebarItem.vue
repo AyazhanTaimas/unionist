@@ -1,6 +1,7 @@
 <script setup lang="ts">
     import { computed } from 'vue'
     import { useRoute, useRouter } from 'vue-router'
+    import { useAppShell } from '@/app/providers/layout/useAppShell'
     import type { SidebarItem } from '../model/types.ts'
 
     const props= defineProps<{
@@ -9,11 +10,18 @@
 
     const route = useRoute()
     const router = useRouter()
+    const { closeSidebar } = useAppShell()
 
     const isActive = computed(() => route.path === props.item.route)
 
-    const go = () => {
-        router.push(props.item.route)
+    const go = async () => {
+        closeSidebar()
+
+        if (route.path === props.item.route) {
+            return
+        }
+
+        await router.push(props.item.route)
     }
 </script>
 
