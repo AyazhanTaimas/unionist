@@ -18,395 +18,293 @@ const residenceLine = computed(
 </script>
 
 <template>
-  <div class="residence-layout">
-    <section class="hero-card">
-      <div class="hero-copy">
+  <section class="residence-page">
+    <div class="hero">
+      <div>
         <p class="eyebrow">Student / Housing</p>
-        <span class="status-pill">Активное проживание</span>
-        <h2 class="hero-title">Вы уже заселены</h2>
-        <p class="hero-description">
+        <h1>Проживание</h1>
+        <p class="subtitle">
           Комната закреплена за вами. Здесь можно быстро запросить перевод в
           другую комнату или оформить выселение без отдельного обращения в
           администрацию.
         </p>
 
-        <div class="address-card">
-          <span class="address-label">Текущая локация</span>
+        <div class="summary-card">
+          <span class="detail-label">Текущая комната</span>
           <strong>{{ residenceLine }}</strong>
         </div>
       </div>
+    </div>
 
-      <div class="hero-summary">
-        <article class="summary-tile summary-tile--wide">
-          <span class="summary-label">Корпус</span>
-          <strong>{{ buildingName }}</strong>
-        </article>
+    <div class="stats">
+      <article class="stat-card">
+        <span class="stat-label">Статус</span>
+        <strong>Заселены</strong>
+      </article>
 
-        <div class="summary-grid">
-          <article class="summary-tile">
-            <span class="summary-label">Этаж</span>
-            <strong>{{ floorNumber }}</strong>
-          </article>
+      <article class="stat-card">
+        <span class="stat-label">Корпус</span>
+        <strong>{{ buildingName }}</strong>
+      </article>
 
-          <article class="summary-tile">
-            <span class="summary-label">Комната</span>
-            <strong>{{ roomNumber }}</strong>
-          </article>
-        </div>
-      </div>
-    </section>
+      <article class="stat-card">
+        <span class="stat-label">Этаж</span>
+        <strong>{{ floorNumber }}</strong>
+      </article>
 
-    <section class="residence-actions">
-      <button
-        type="button"
-        class="action-card action-card--change"
-        @click="$emit('change-room')"
-      >
-        <span class="action-tag">Room switch</span>
-        <h3>Поменять комнату</h3>
+      <article class="stat-card">
+        <span class="stat-label">Комната</span>
+        <strong>{{ roomNumber }}</strong>
+      </article>
+    </div>
+
+    <div class="actions-grid">
+      <article class="action-card">
+        <span class="action-badge change">Новый запрос</span>
+        <h2>Смена комнаты</h2>
         <p>
-          Откроется новый сценарий выбора корпуса, этажа и комнаты. Текущий
-          статус проживания останется активным до решения по запросу.
+          Откроется стандартный сценарий выбора корпуса, этажа и комнаты для
+          подачи новой заявки.
         </p>
 
-        <div class="action-footer">
-          <span class="action-chip">Новый запрос</span>
-          <span class="action-link">Открыть</span>
-        </div>
-      </button>
+        <button
+          type="button"
+          class="action-btn action-btn--primary"
+          @click="$emit('change-room')"
+        >
+          Поменять комнату
+        </button>
+      </article>
 
-      <button
-        type="button"
-        class="action-card action-card--evict"
-        @click="$emit('evict')"
-      >
-        <span class="action-tag">Checkout</span>
-        <h3>Выселиться</h3>
+      <article class="action-card">
+        <span class="action-badge evict">Подтверждение</span>
+        <h2>Выселение</h2>
         <p>
-          Если проживание завершено, отправьте запрос на выезд. Подтверждение
-          будет обработано администрацией отдельно.
+          Если проживание завершено, отправьте запрос на выезд. Он будет
+          обработан администрацией отдельно.
         </p>
 
-        <div class="action-footer">
-          <span class="action-chip">Подтверждение</span>
-          <span class="action-link">Продолжить</span>
-        </div>
-      </button>
-    </section>
-
-  </div>
+        <button
+          type="button"
+          class="action-btn action-btn--danger"
+          @click="$emit('evict')"
+        >
+          Выселиться
+        </button>
+      </article>
+    </div>
+  </section>
 </template>
 
 <style scoped>
-.residence-layout {
+.residence-page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  color: #12203a;
+  gap: 20px;
+  color: #172033;
 }
 
-.hero-card {
-  position: relative;
+.hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) 360px;
-  gap: 24px;
-  padding: 34px;
-  border-radius: 34px;
-  overflow: hidden;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  padding: 28px 32px;
+  border-radius: 32px;
   background:
-    radial-gradient(circle at top right, rgba(255, 205, 84, 0.22), transparent 24%),
-    radial-gradient(circle at bottom left, rgba(148, 204, 255, 0.14), transparent 30%),
-    linear-gradient(140deg, #12294b 0%, #1b3f74 52%, #3d57c5 100%);
-  box-shadow: 0 28px 70px rgba(18, 41, 75, 0.24);
-}
-
-.hero-card::before {
-  content: '';
-  position: absolute;
-  right: -100px;
-  top: -120px;
-  width: 280px;
-  height: 280px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.hero-card::after {
-  content: '';
-  position: absolute;
-  left: 45%;
-  bottom: -96px;
-  width: 220px;
-  height: 220px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.hero-copy,
-.hero-summary {
-  position: relative;
-  z-index: 1;
+    radial-gradient(circle at top right, rgba(91, 79, 255, 0.16), transparent 28%),
+    linear-gradient(135deg, #ffffff 0%, #f3f2ff 100%);
+  border: 1px solid #ddd9ff;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
 }
 
 .eyebrow {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  margin-top: 18px;
-  padding: 0 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.hero-title {
-  margin: 18px 0 0;
-  font-size: clamp(34px, 4vw, 52px);
-  line-height: 1.02;
-  font-weight: 800;
-  color: #ffffff;
-}
-
-.hero-description {
-  max-width: 620px;
-  margin: 18px 0 0;
-  color: rgba(240, 245, 255, 0.82);
-  font-size: 16px;
-  line-height: 1.7;
-}
-
-.address-card {
-  max-width: 620px;
-  margin-top: 28px;
-  padding: 20px 22px;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(10px);
-}
-
-.address-label,
-.summary-label {
-  display: block;
-  margin-bottom: 10px;
+  margin: 0 0 10px;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: #5b4fff;
 }
 
-.address-label {
-  color: rgba(255, 255, 255, 0.7);
+h1 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.05;
+  font-weight: 800;
 }
 
-.address-card strong {
+.subtitle {
+  max-width: 760px;
+  margin: 12px 0 0;
+  line-height: 1.6;
+  color: #526075;
+}
+
+.summary-card {
+  max-width: 760px;
+  margin-top: 20px;
+  padding: 18px 20px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid #ddd9ff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.detail-label,
+.stat-label {
   display: block;
-  color: #ffffff;
+  margin-bottom: 10px;
+  color: #68768b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.summary-card strong {
+  display: block;
+  color: #172033;
   font-size: 24px;
   line-height: 1.35;
 }
 
-.hero-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.summary-grid {
+.stats {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.summary-tile {
-  padding: 22px;
-  border-radius: 26px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(12px);
-}
-
-.summary-tile--wide {
-  min-height: 154px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
-
-.summary-tile strong {
-  display: block;
-  color: #ffffff;
-  font-size: 28px;
-  line-height: 1.15;
-}
-
-.summary-label {
-  color: rgba(255, 255, 255, 0.68);
-}
-
-.residence-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-}
-
-.action-card {
-  position: relative;
-  min-height: 310px;
-  padding: 30px;
-  border: none;
-  border-radius: 32px;
-  cursor: pointer;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden;
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease;
-  font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-.action-card::before {
-  content: '';
-  position: absolute;
-  inset: auto -48px -60px auto;
-  width: 220px;
-  height: 220px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.26);
-  pointer-events: none;
-}
-
-.action-card:hover {
-  transform: translateY(-6px);
-}
-
-.action-card--change {
-  background: linear-gradient(135deg, #ecfff2 0%, #d8f4e5 100%);
-  color: #103527;
-  box-shadow: 0 20px 44px rgba(16, 53, 39, 0.12);
-}
-
-.action-card--evict {
-  background: linear-gradient(135deg, #fff5ef 0%, #f4d8ce 100%);
-  color: #4a241c;
-  box-shadow: 0 20px 44px rgba(74, 36, 28, 0.12);
-}
-
-.action-tag {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.48);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.action-card h3,
-.action-card p,
-.action-footer {
-  position: relative;
-  z-index: 1;
-}
-
-.action-card h3 {
-  margin: 18px 0 0;
-  font-size: clamp(30px, 3vw, 42px);
-  line-height: 1.02;
-  font-weight: 800;
-}
-
-.action-card p {
-  max-width: 35ch;
-  margin: 14px 0 0;
-  font-size: 16px;
-  line-height: 1.65;
-  color: inherit;
-}
-
-.action-footer {
-  margin-top: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 }
 
-.action-chip {
+.stat-card,
+.action-card {
+  background: #fff;
+  border: 1px solid #dbe5f0;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.stat-card {
+  padding: 18px 20px;
+  border-radius: 22px;
+}
+
+.stat-card strong {
+  display: block;
+  font-size: 28px;
+  line-height: 1.2;
+  color: #172033;
+  word-break: break-word;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.action-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 28px;
+}
+
+.action-badge {
   display: inline-flex;
   align-items: center;
-  min-height: 34px;
-  padding: 0 14px;
+  align-self: flex-start;
+  min-height: 32px;
+  padding: 0 12px;
   border-radius: 999px;
-  background: rgba(18, 32, 58, 0.08);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 }
 
-.action-link {
-  font-size: 15px;
+.action-badge.change {
+  background: rgba(91, 79, 255, 0.12);
+  color: #4c44d4;
+}
+
+.action-badge.evict {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.action-card h2 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.15;
   font-weight: 800;
+  color: #172033;
+}
+
+.action-card p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #526075;
+  flex: 1;
+}
+
+.action-btn {
+  min-height: 48px;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.action-btn--primary {
+  background: #5b4fff;
+  color: #fff;
+}
+
+.action-btn--danger {
+  background: #172033;
+  color: #fff;
 }
 
 @media (max-width: 1200px) {
-  .hero-card {
-    grid-template-columns: 1fr;
-  }
-
-  .summary-tile--wide {
-    min-height: auto;
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 960px) {
-  .residence-actions {
+  .actions-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 700px) {
-  .hero-card {
+  .residence-page {
+    gap: 18px;
+  }
+
+  .hero {
     padding: 24px 20px;
-    border-radius: 28px;
+    border-radius: 24px;
   }
 
-  .address-card strong,
-  .summary-tile strong {
-    font-size: 22px;
+  h1 {
+    font-size: 28px;
   }
 
-  .summary-grid {
+  .summary-card strong {
+    font-size: 20px;
+  }
+
+  .stats {
     grid-template-columns: 1fr;
   }
 
   .action-card {
-    min-height: 260px;
-    padding: 24px 22px;
-    border-radius: 28px;
+    padding: 22px 20px;
+    border-radius: 24px;
   }
 
-  .action-card h3 {
-    font-size: 30px;
+  .action-card h2 {
+    font-size: 24px;
   }
 }
 </style>

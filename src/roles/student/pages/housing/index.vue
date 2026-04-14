@@ -128,35 +128,16 @@ const showResidenceDashboard = computed(
 .accommodation-page {
   width: 100%;
   min-height: 100%;
-  margin-top: 70px;
+  margin-top: 72px;
 }
 
 .accommodation-page--residence {
-  position: relative;
-  padding-bottom: 32px;
-}
-
-.accommodation-page--residence::before {
-  content: '';
-  position: absolute;
-  inset: -32px 0 auto;
-  height: 280px;
-  border-radius: 40px;
-  background:
-    radial-gradient(circle at top right, rgba(255, 205, 84, 0.26), transparent 34%),
-    radial-gradient(circle at top left, rgba(70, 85, 255, 0.18), transparent 42%),
-    linear-gradient(135deg, rgba(18, 42, 74, 0.12), rgba(18, 42, 74, 0));
-  pointer-events: none;
-  filter: blur(2px);
+  padding-bottom: 12px;
 }
 
 .card-wrapper {
   position: relative;
   width: 100%;
-}
-
-.card-wrapper--residence {
-  isolation: isolate;
 }
 
 .accent-line {
@@ -199,7 +180,7 @@ const showResidenceDashboard = computed(
 
 @media (max-width: 900px) {
   .accommodation-page {
-    margin-top: 48px;
+    margin-top: 56px;
   }
 }
 
