@@ -402,12 +402,12 @@ h1 {
 .users-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 18px;
+  gap: 14px;
 }
 
 .user-card {
-  padding: 22px;
-  border-radius: 28px;
+  padding: 18px 20px;
+  border-radius: 24px;
 }
 
 .card-top {
@@ -419,54 +419,54 @@ h1 {
 
 .card-top h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1.15;
 }
 
 .subline {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   color: #68768b;
   line-height: 1.5;
 }
 
 .role-badge {
   flex-shrink: 0;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 999px;
   background: #eef4ff;
   color: #1d4ed8;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
 }
 
 .details-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 18px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .detail {
-  padding: 14px 16px;
-  border-radius: 18px;
+  padding: 12px 14px;
+  border-radius: 16px;
   background: #f8fbff;
   border: 1px solid #e2ebf5;
 }
 
 .detail span {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #7a8799;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
 .detail strong {
   color: #172033;
-  line-height: 1.5;
+  line-height: 1.35;
 }
 
 .footer {
@@ -474,12 +474,12 @@ h1 {
   justify-content: space-between;
   gap: 12px;
   align-items: center;
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
 .date-label {
   color: #68768b;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .actions {
@@ -514,9 +514,12 @@ h1 {
 
 @media (max-width: 1080px) {
   .stats,
-  .users-grid,
-  .details-grid {
+  .users-grid {
     grid-template-columns: 1fr;
+  }
+
+  .details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -545,6 +548,14 @@ h1 {
   .hero-actions,
   .actions {
     width: 100%;
+  }
+
+  .user-card {
+    padding: 16px;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>
