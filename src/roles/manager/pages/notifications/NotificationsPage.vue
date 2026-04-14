@@ -15,7 +15,6 @@ const notice = ref<string | null>(null)
 const form = ref({
   title: '',
   message: '',
-  action_url: '',
 })
 
 const fetchNotifications = async () => {
@@ -37,7 +36,6 @@ const resetForm = () => {
   form.value = {
     title: '',
     message: '',
-    action_url: '',
   }
 }
 
@@ -56,7 +54,6 @@ const submit = async () => {
     await createBroadcastNotification({
       title: form.value.title.trim(),
       message: form.value.message.trim(),
-      action_url: form.value.action_url.trim() || null,
     })
 
     notice.value = 'Уведомление отправлено всем пользователям'
@@ -138,17 +135,6 @@ onMounted(fetchNotifications)
           />
         </label>
 
-        <label class="field">
-          <span class="field-label">Ссылка внутри приложения</span>
-          <input
-            v-model="form.action_url"
-            class="field-input"
-            type="text"
-            maxlength="255"
-            placeholder="Например: /news"
-          />
-        </label>
-
         <button class="primary-btn" :disabled="submitting" @click="submit">
           {{ submitting ? 'Отправка...' : 'Отправить всем' }}
         </button>
@@ -196,11 +182,6 @@ onMounted(fetchNotifications)
           <div class="meta-card">
             <span class="meta-label">Дата</span>
             <span class="meta-value">{{ formatDate(item.created_at) }}</span>
-          </div>
-
-          <div class="meta-card">
-            <span class="meta-label">Ссылка</span>
-            <span class="meta-value">{{ item.action_url || 'Не указана' }}</span>
           </div>
         </div>
       </article>
@@ -430,7 +411,7 @@ h1 {
 
 .meta-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 14px;
 }
