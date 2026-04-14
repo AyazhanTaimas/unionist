@@ -138,6 +138,11 @@ export const router = createRouter({
           component: () => import('@/roles/manager/pages/news/NewsPage.vue'),
         },
         {
+          path: 'notifications',
+          name: 'manager-notifications',
+          component: () => import('@/roles/manager/pages/notifications/NotificationsPage.vue'),
+        },
+        {
           path: 'users',
           name: 'manager-users',
           component: () => import('@/roles/manager/pages/users/UsersPage.vue'),
