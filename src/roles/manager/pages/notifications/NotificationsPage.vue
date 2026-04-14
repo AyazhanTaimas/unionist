@@ -391,6 +391,22 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  max-height: clamp(320px, 48vh, 560px);
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.notification-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.notification-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.65);
+}
+
+.notification-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .notification-card {
@@ -477,6 +493,11 @@ h1 {
 
   .notification-top {
     flex-direction: column;
+  }
+
+  .notification-list {
+    max-height: 420px;
+    padding-right: 2px;
   }
 }
 </style>
