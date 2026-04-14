@@ -7,8 +7,10 @@ import {
   type PenaltyItem,
   type PenaltyDetail,
 } from './penaltyApi'
+import { getProfile } from '@/roles/student/pages/profile/ui/profileApi'
 
 const penaltyRulesPdfUrl = '/penalty_rules.pdf'
+const DEFAULT_DISCIPLINE_LIMIT = 10
 
 type PageMode = 'list' | 'detail'
 
@@ -20,6 +22,7 @@ const error = ref<string | null>(null)
 const penalties = ref<PenaltyItem[]>([])
 const selectedPenalty = ref<PenaltyDetail | null>(null)
 const pageMode = ref<PageMode>('list')
+const disciplineLimit = ref(DEFAULT_DISCIPLINE_LIMIT)
 
 const showRedeemModal = ref(false)
 
@@ -31,12 +34,18 @@ const redeemForm = ref({
 
 const redeemFormError = ref<string | null>(null)
 
-const positiveCount = computed(() => {
-  return penalties.value.filter(item => item.points > 0).length
+const activePoints = computed(() => {
+  return penalties.value.reduce((total, item) => {
+    if (item.redeemed || item.points <= 0) {
+      return total
+    }
+
+    return total + item.points
+  }, 0)
 })
 
 const scoreText = computed(() => {
-  return `${positiveCount.value} / 5`
+  return `${activePoints.value} / ${disciplineLimit.value}`
 })
 
 function formatPoints(value: number) {
@@ -59,6 +68,20 @@ async function loadPenalties() {
     penalties.value = []
   } finally {
     loading.value = false
+  }
+}
+
+async function loadDisciplineLimit() {
+  try {
+    const profile = await getProfile()
+    const limit = Number(profile.discipline_limit)
+
+    disciplineLimit.value = Number.isFinite(limit) && limit > 0
+      ? limit
+      : DEFAULT_DISCIPLINE_LIMIT
+  } catch (e) {
+    console.error(e)
+    disciplineLimit.value = DEFAULT_DISCIPLINE_LIMIT
   }
 }
 
@@ -145,7 +168,7 @@ async function submitRedeem() {
 }
 
 onMounted(() => {
-  loadPenalties()
+  void Promise.all([loadPenalties(), loadDisciplineLimit()])
 })
 </script>
 
