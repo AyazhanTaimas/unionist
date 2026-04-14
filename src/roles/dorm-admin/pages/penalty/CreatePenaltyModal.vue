@@ -10,6 +10,8 @@ import {
   type PenaltyTarget,
 } from './api'
 
+const MAX_PENALTY_POINTS = 10
+
 const emit = defineEmits<{
   close: []
   created: [message: string]
@@ -145,6 +147,11 @@ const submit = async () => {
 
   if (form.value.points && Number(form.value.points) <= 0) {
     formError.value = 'Количество баллов должно быть больше нуля'
+    return
+  }
+
+  if (form.value.points && Number(form.value.points) > MAX_PENALTY_POINTS) {
+    formError.value = `Количество баллов не должно превышать ${MAX_PENALTY_POINTS}`
     return
   }
 
@@ -313,6 +320,7 @@ onMounted(loadOptions)
             v-model="form.points"
             type="number"
             min="1"
+            :max="MAX_PENALTY_POINTS"
             placeholder="Оставьте пустым, чтобы взять значение из правила"
           />
 
