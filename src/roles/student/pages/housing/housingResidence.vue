@@ -94,25 +94,6 @@ const residenceLine = computed(
       </button>
     </section>
 
-    <section class="info-strip">
-      <article class="info-card">
-        <span class="info-label">Статус</span>
-        <strong>Проживание активно</strong>
-        <p>Комната уже закреплена, а действия доступны прямо из кабинета.</p>
-      </article>
-
-      <article class="info-card">
-        <span class="info-label">Расположение</span>
-        <strong>{{ buildingName }}</strong>
-        <p>{{ floorNumber }} этаж, комната {{ roomNumber }}</p>
-      </article>
-
-      <article class="info-card">
-        <span class="info-label">Следующий шаг</span>
-        <strong>Смена комнаты или выезд</strong>
-        <p>Обе операции запускаются отсюда и подтверждаются отдельно.</p>
-      </article>
-    </section>
   </div>
 </template>
 
@@ -387,42 +368,6 @@ const residenceLine = computed(
   font-weight: 800;
 }
 
-.info-strip {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.info-card {
-  padding: 22px 24px;
-  border-radius: 26px;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid #d8e2f0;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
-}
-
-.info-label {
-  display: block;
-  margin-bottom: 12px;
-  color: #66758b;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.info-card strong {
-  display: block;
-  font-size: 24px;
-  line-height: 1.2;
-}
-
-.info-card p {
-  margin: 12px 0 0;
-  color: #66758b;
-  line-height: 1.6;
-}
-
 @media (max-width: 1200px) {
   .hero-card {
     grid-template-columns: 1fr;
@@ -437,10 +382,6 @@ const residenceLine = computed(
   .residence-actions {
     grid-template-columns: 1fr;
   }
-
-  .info-strip {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 700px) {
@@ -450,8 +391,7 @@ const residenceLine = computed(
   }
 
   .address-card strong,
-  .summary-tile strong,
-  .info-card strong {
+  .summary-tile strong {
     font-size: 22px;
   }
 
@@ -467,10 +407,6 @@ const residenceLine = computed(
 
   .action-card h3 {
     font-size: 30px;
-  }
-
-  .info-card {
-    padding: 20px;
   }
 }
 </style>
