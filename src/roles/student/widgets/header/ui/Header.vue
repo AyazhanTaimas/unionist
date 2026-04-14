@@ -220,9 +220,6 @@ onUnmounted(() => {
               </div>
 
               <p>{{ item.message }}</p>
-              <span class="notification-item__meta">
-                {{ item.sender_name || 'Система' }}
-              </span>
             </button>
           </div>
         </div>
@@ -402,7 +399,7 @@ onUnmounted(() => {
 }
 
 .notification-item__top span,
-.notification-item__meta {
+.notification-item p {
   color: #68768b;
   font-size: 12px;
 }
@@ -412,11 +409,6 @@ onUnmounted(() => {
   color: #526075;
   font-size: 13px;
   line-height: 1.55;
-}
-
-.notification-item__meta {
-  display: inline-block;
-  margin-top: 10px;
 }
 
 .logout-btn {
