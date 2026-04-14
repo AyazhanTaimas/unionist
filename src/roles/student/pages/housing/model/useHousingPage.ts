@@ -5,6 +5,11 @@ import { createLiveRequest } from '../request/requestApi'
 import { createChangeRoomRequest } from '../changeRoomApi'
 import { getHousingStatus } from '../statusApi'
 import type { Building, Floor, Room, CurrentResidence, View } from './types'
+import {
+  getScopedSessionItem,
+  setAuthRole,
+  setScopedSessionItem,
+} from '@/app/session/authStorage'
 
 export function useHousingPage() {
   const buildings = ref<Building[]>([])
@@ -72,7 +77,7 @@ export function useHousingPage() {
   })
 
   function getUserId(): number | null {
-    const rawUser = localStorage.getItem('user')
+    const rawUser = getScopedSessionItem('user')
 
     if (rawUser) {
       try {
@@ -84,10 +89,8 @@ export function useHousingPage() {
     }
 
     const rawId =
-      localStorage.getItem('user_id') ||
-      localStorage.getItem('userId') ||
-      sessionStorage.getItem('user_id') ||
-      sessionStorage.getItem('userId')
+      getScopedSessionItem('user_id') ||
+      getScopedSessionItem('userId')
 
     if (!rawId) return null
 
@@ -110,11 +113,11 @@ export function useHousingPage() {
         return null
       }
 
-      localStorage.setItem('user', JSON.stringify(user))
-      localStorage.setItem('user_id', String(user.id))
+      setScopedSessionItem('user', JSON.stringify(user))
+      setScopedSessionItem('user_id', String(user.id))
 
       if (user.role) {
-        localStorage.setItem('role', user.role)
+        setAuthRole(user.role)
       }
 
       return Number(user.id)

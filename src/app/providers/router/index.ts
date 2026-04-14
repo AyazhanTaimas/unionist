@@ -4,6 +4,7 @@ import ManagerLayout from '@/roles/manager/widgets/layout/ui/MainLayout.vue'
 import LoginPage from '@/pages/login/LoginPage.vue'
 import DormAdminLayout from '@/roles/dorm-admin/widgets/layout/ui/MainLayout.vue'
 import EmployeeLayout from '@/roles/employee/widgets/layout/ui/MainLayout.vue'
+import { getAuthRole, getAuthToken } from '@/app/session/authStorage'
 
 type AppRole = 'student' | 'manager' | 'admin' | 'dorm-admin' | 'employee' | null
 
@@ -213,8 +214,8 @@ export const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  const token = localStorage.getItem('token')
-  const role = normalizeRole(localStorage.getItem('role'))
+  const token = getAuthToken()
+  const role = normalizeRole(getAuthRole())
 
   if (to.path === '/login') {
     if (!token) return true

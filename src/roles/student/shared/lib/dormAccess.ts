@@ -1,4 +1,10 @@
 import { api } from '@/api/instance'
+import {
+  getAuthToken,
+  getScopedSessionItem,
+  removeScopedSessionItem,
+  setScopedSessionItem,
+} from '@/app/session/authStorage'
 
 interface CurrentUser {
   id: number
@@ -35,7 +41,7 @@ let dormAccessStateValue: DormAccessState | null = null
 let dormAccessStatePromise: Promise<DormAccessState> | null = null
 
 function hasToken(): boolean {
-  return Boolean(localStorage.getItem('token'))
+  return Boolean(getAuthToken())
 }
 
 function normalizePath(path: string): string {
@@ -48,7 +54,7 @@ function readStoredUser(): CurrentUser | null {
     return null
   }
 
-  const raw = localStorage.getItem(USER_STORAGE_KEY)
+  const raw = getScopedSessionItem(USER_STORAGE_KEY)
 
   if (!raw) {
     return null
@@ -69,13 +75,13 @@ function readStoredUser(): CurrentUser | null {
 
 function persistUser(user: CurrentUser | null): void {
   if (!user) {
-    localStorage.removeItem(USER_STORAGE_KEY)
-    localStorage.removeItem(USER_ID_STORAGE_KEY)
+    removeScopedSessionItem(USER_STORAGE_KEY)
+    removeScopedSessionItem(USER_ID_STORAGE_KEY)
     return
   }
 
-  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
-  localStorage.setItem(USER_ID_STORAGE_KEY, String(user.id))
+  setScopedSessionItem(USER_STORAGE_KEY, JSON.stringify(user))
+  setScopedSessionItem(USER_ID_STORAGE_KEY, String(user.id))
 }
 
 export function persistDormAccessUser(user: CurrentUser | null): void {
@@ -89,7 +95,7 @@ function readStoredApproval(): boolean | null {
     return null
   }
 
-  const raw = localStorage.getItem(DORM_APPROVAL_STORAGE_KEY)
+  const raw = getScopedSessionItem(DORM_APPROVAL_STORAGE_KEY)
 
   if (raw === '1') {
     return true
@@ -103,7 +109,7 @@ function readStoredApproval(): boolean | null {
 }
 
 function persistApproval(isApproved: boolean): void {
-  localStorage.setItem(DORM_APPROVAL_STORAGE_KEY, isApproved ? '1' : '0')
+  setScopedSessionItem(DORM_APPROVAL_STORAGE_KEY, isApproved ? '1' : '0')
 }
 
 async function loadCurrentUser(): Promise<CurrentUser | null> {
@@ -246,7 +252,7 @@ export function resetDormAccessState(): void {
   dormAccessStateValue = null
   dormAccessStatePromise = null
 
-  localStorage.removeItem(USER_STORAGE_KEY)
-  localStorage.removeItem(USER_ID_STORAGE_KEY)
-  localStorage.removeItem(DORM_APPROVAL_STORAGE_KEY)
+  removeScopedSessionItem(USER_STORAGE_KEY)
+  removeScopedSessionItem(USER_ID_STORAGE_KEY)
+  removeScopedSessionItem(DORM_APPROVAL_STORAGE_KEY)
 }

@@ -13,6 +13,7 @@ import { useRouter } from 'vue-router'
 import { api } from '@/api/instance'
 import { resetDormAccessState } from '@/roles/student/shared/lib/dormAccess'
 import { useAppShell } from '@/app/providers/layout/useAppShell'
+import { clearAuthSession, getAuthRole, getAuthToken } from '@/app/session/authStorage'
 
 const router = useRouter()
 const notifications = ref<InboxNotificationItem[]>([])
@@ -25,7 +26,7 @@ const { isMobileViewport, toggleSidebar } = useAppShell()
 let refreshIntervalId: number | null = null
 
 function goProfile() {
-  if (localStorage.getItem('role') !== 'student') {
+  if (getAuthRole() !== 'student') {
     return
   }
 
@@ -47,7 +48,7 @@ const formatNotificationDate = (value: string | null) => {
 }
 
 const fetchNotifications = async () => {
-  if (!localStorage.getItem('token')) {
+  if (!getAuthToken()) {
     notifications.value = []
     unreadCount.value = 0
     return
@@ -143,7 +144,7 @@ async function logout() {
   try {
     await api.post('/logout')
   } finally {
-    localStorage.removeItem('token')
+    clearAuthSession()
     resetDormAccessState()
     router.push({ name: 'login' })
   }

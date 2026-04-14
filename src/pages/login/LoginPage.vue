@@ -6,6 +6,7 @@ import {
   persistDormAccessUser,
   resetDormAccessState,
 } from '@/roles/student/shared/lib/dormAccess'
+import { setAuthSession } from '@/app/session/authStorage'
 
 const router = useRouter()
 
@@ -28,8 +29,7 @@ const handleLogin = async () => {
     const role = user.role ?? 'student'
 
     resetDormAccessState()
-    localStorage.setItem('token', response.data.token.access_token)
-    localStorage.setItem('role', role)
+    setAuthSession(response.data.token.access_token, role)
     persistDormAccessUser({
       ...user,
       role,
