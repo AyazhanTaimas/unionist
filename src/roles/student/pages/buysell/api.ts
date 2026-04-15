@@ -48,6 +48,40 @@ export interface BuySellMeta {
   statuses: BuySellOption[]
 }
 
+function isLocalHost(hostname: string) {
+  return ['localhost', '127.0.0.1', '0.0.0.0'].includes(hostname)
+}
+
+function normalizePublicAssetUrl(value?: string | null): string | null {
+  if (!value) return null
+  if (typeof window === 'undefined') return value
+
+  try {
+    const url = new URL(value, window.location.origin)
+
+    if (isLocalHost(url.hostname) && !isLocalHost(window.location.hostname)) {
+      return `${window.location.origin}${url.pathname}${url.search}${url.hash}`
+    }
+
+    return url.toString()
+  } catch {
+    return value
+  }
+}
+
+function normalizeListingImages(listing: BuySellListing): BuySellListing {
+  const images = (listing.images ?? [])
+    .map((image) => normalizePublicAssetUrl(image))
+    .filter((image): image is string => Boolean(image))
+  const coverImage = normalizePublicAssetUrl(listing.cover_image) ?? images[0] ?? null
+
+  return {
+    ...listing,
+    images,
+    cover_image: coverImage,
+  }
+}
+
 export async function getBuySellMeta(): Promise<BuySellMeta> {
   const { data } = await api.get<ApiResponse<BuySellMeta>>('/buy-sell/meta')
   return data.data
@@ -65,12 +99,12 @@ export async function getBuySellListings(params?: {
     params,
   })
 
-  return data.data ?? []
+  return (data.data ?? []).map(normalizeListingImages)
 }
 
 export async function getBuySellListing(id: number): Promise<BuySellListing> {
   const { data } = await api.get<ApiResponse<BuySellListing>>(`/buy-sell/listings/${id}`)
-  return data.data
+  return normalizeListingImages(data.data)
 }
 
 export async function createBuySellListing(formData: FormData): Promise<BuySellListing> {
@@ -80,7 +114,7 @@ export async function createBuySellListing(formData: FormData): Promise<BuySellL
     },
   })
 
-  return data.data
+  return normalizeListingImages(data.data)
 }
 
 export async function updateBuySellListing(id: number, formData: FormData): Promise<BuySellListing> {
@@ -96,7 +130,7 @@ export async function updateBuySellListing(id: number, formData: FormData): Prom
     }
   )
 
-  return data.data
+  return normalizeListingImages(data.data)
 }
 
 export async function deleteBuySellListing(id: number): Promise<void> {

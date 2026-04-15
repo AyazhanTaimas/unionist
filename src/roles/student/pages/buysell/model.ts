@@ -28,17 +28,20 @@ export function getListingAccent(seed: number) {
   return listingAccents[Math.abs(seed) % listingAccents.length]
 }
 
-export function getListingCoverStyle(listing: Pick<BuySellListing, 'id' | 'cover_image'>) {
+export function getListingCoverStyle(
+  listing: Pick<BuySellListing, 'id' | 'cover_image' | 'images'>
+) {
   const accent = getListingAccent(listing.id)
+  const coverImage = listing.cover_image || listing.images?.[0]
 
-  if (!listing.cover_image) {
+  if (!coverImage) {
     return {
       backgroundImage: accent,
     }
   }
 
   return {
-    backgroundImage: `${accent}, url(${listing.cover_image})`,
+    backgroundImage: `url(${JSON.stringify(coverImage)}), ${accent}`,
   }
 }
 
