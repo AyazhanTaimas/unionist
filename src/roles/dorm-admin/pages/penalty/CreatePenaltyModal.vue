@@ -28,7 +28,13 @@ const targets = ref<PenaltyTarget[]>([])
 const roomTargets = ref<PenaltyRoomTarget[]>([])
 const rules = ref<PenaltyRule[]>([])
 
-const form = ref({
+const form = ref<{
+  user_id: string | number
+  room_id: string | number
+  rule_id: string | number
+  points: string | number
+  description: string
+}>({
   user_id: '',
   room_id: '',
   rule_id: '',
@@ -129,6 +135,7 @@ const loadOptions = async () => {
 
 const submit = async () => {
   formError.value = null
+  const pointsValue = String(form.value.points).trim()
 
   if (targetMode.value === 'student' && !form.value.user_id) {
     formError.value = 'Выберите студента'
@@ -145,12 +152,12 @@ const submit = async () => {
     return
   }
 
-  if (form.value.points && Number(form.value.points) <= 0) {
-    formError.value = 'Количество баллов должно быть больше нуля'
+  if (pointsValue && Number(pointsValue) < 0) {
+    formError.value = 'Количество баллов не может быть отрицательным'
     return
   }
 
-  if (form.value.points && Number(form.value.points) > MAX_PENALTY_POINTS) {
+  if (pointsValue && Number(pointsValue) > MAX_PENALTY_POINTS) {
     formError.value = `Количество баллов не должно превышать ${MAX_PENALTY_POINTS}`
     return
   }
@@ -161,15 +168,15 @@ const submit = async () => {
     const payload = new FormData()
 
     if (targetMode.value === 'student') {
-      payload.append('user_id', form.value.user_id)
+      payload.append('user_id', String(form.value.user_id))
     } else {
-      payload.append('room_id', form.value.room_id)
+      payload.append('room_id', String(form.value.room_id))
     }
 
-    payload.append('rule_id', form.value.rule_id)
+    payload.append('rule_id', String(form.value.rule_id))
 
-    if (form.value.points) {
-      payload.append('points', form.value.points)
+    if (pointsValue !== '') {
+      payload.append('points', pointsValue)
     }
 
     if (form.value.description.trim()) {
@@ -319,7 +326,7 @@ onMounted(loadOptions)
           <input
             v-model="form.points"
             type="number"
-            min="1"
+            min="0"
             :max="MAX_PENALTY_POINTS"
             placeholder="Оставьте пустым, чтобы взять значение из правила"
           />
