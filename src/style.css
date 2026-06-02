@@ -54,6 +54,275 @@ textarea {
   resize: vertical;
 }
 
+a,
+button,
+input,
+select,
+textarea {
+  min-width: 0;
+}
+
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 720px) {
+  html,
+  body,
+  #app {
+    overflow-x: hidden;
+  }
+
+  #app :is(
+    .requests-page,
+    .repairs-page,
+    .notifications-page,
+    .users-page,
+    .penalties-page,
+    .buysell-page,
+    .manage-page,
+    .detail-page,
+    .gym-page,
+    .finance-page,
+    .penalty-page,
+    .accommodation-page,
+    .success-page,
+    .manager-home,
+    .student-home,
+    .news-page
+  ) {
+    min-width: 0;
+  }
+
+  #app :is(
+    .requests-page,
+    .repairs-page,
+    .notifications-page,
+    .users-page,
+    .penalties-page
+  ) .hero {
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  #app :is(
+    .requests-page,
+    .repairs-page,
+    .notifications-page,
+    .users-page,
+    .penalties-page,
+    .buysell-page,
+    .manage-page,
+    .detail-page,
+    .gym-page,
+    .finance-page,
+    .penalty-page,
+    .accommodation-page,
+    .success-page,
+    .manager-home,
+    .student-home
+  ) :is(h1, h2, h3) {
+    overflow-wrap: anywhere;
+  }
+
+  #app :is(
+    .requests-page,
+    .repairs-page,
+    .notifications-page,
+    .users-page,
+    .penalties-page,
+    .buysell-page,
+    .manage-page,
+    .detail-page,
+    .gym-page,
+    .finance-page,
+    .penalty-page,
+    .accommodation-page,
+    .success-page,
+    .manager-home,
+    .student-home
+  ) :is(
+    .subtitle,
+    .description,
+    .description-text,
+    .notification-message,
+    .student-row,
+    .meta-row,
+    .detail-value,
+    .footer-note,
+    .summary-card strong,
+    .stat-card strong,
+    .detail-card strong,
+    .listing-copy p,
+    .listing-footer span,
+    .related-copy strong,
+    .related-copy span
+  ) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  #app .success-page {
+    padding: 16px;
+  }
+
+  #app .success-page .card {
+    max-width: 100%;
+  }
+
+  #app .success-page .icon-wrapper {
+    width: 104px;
+    height: 104px;
+  }
+
+  #app .success-page .check-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  #app :is(.requests-page, .repairs-page, .finance-page) .tabs {
+    width: 100%;
+    max-width: 100%;
+    align-self: stretch;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+  }
+
+  #app :is(.requests-page, .repairs-page, .finance-page) .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  #app :is(.requests-page, .repairs-page, .finance-page) .tab-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  #app :is(
+    .requests-page,
+    .repairs-page,
+    .notifications-page,
+    .users-page,
+    .penalties-page
+  ) :is(.refresh-btn, .secondary-btn, .primary-btn) {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #app :is(.users-page, .penalties-page) .hero-actions {
+    width: 100%;
+  }
+
+  #app :is(.users-page, .penalties-page) .hero-actions > * {
+    flex: 1 1 100%;
+  }
+
+  #app :is(.buysell-page, .manage-page, .detail-page) :is(
+    .market-shell,
+    .manage-shell,
+    .detail-shell,
+    .state-shell
+  ) {
+    padding: 18px;
+    border-radius: 24px;
+  }
+
+  #app :is(.buysell-page, .manage-page, .detail-page) :is(
+    .market-topbar,
+    .manage-topbar,
+    .catalog-head,
+    .listing-footer,
+    .detail-head,
+    .section-top,
+    .related-copy,
+    .price-row
+  ) {
+    min-width: 0;
+  }
+
+  #app :is(.buysell-page, .manage-page) .topbar-actions {
+    width: 100%;
+  }
+
+  #app :is(.buysell-page, .manage-page) .topbar-actions > * {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+
+  #app .category-row {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+  }
+
+  #app .category-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  #app .category-chip {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  #app :is(.toolbar, .market-toolbar) {
+    min-width: 0;
+  }
+
+  #app :is(.search-input, .search-box, .status-select, .filter-select) {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #app :is(.overlay, .modal-overlay) {
+    padding: 12px;
+  }
+
+  #app :is(.modal, .confirm-modal) {
+    max-width: 100%;
+    border-radius: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  #app :is(
+    .requests-page,
+    .repairs-page,
+    .notifications-page,
+    .users-page,
+    .penalties-page,
+    .buysell-page,
+    .manage-page,
+    .detail-page,
+    .gym-page,
+    .finance-page,
+    .penalty-page,
+    .accommodation-page,
+    .success-page,
+    .manager-home,
+    .student-home
+  ) h1 {
+    font-size: 25px;
+    line-height: 1.1;
+  }
+
+  #app :is(
+    .requests-page,
+    .repairs-page,
+    .notifications-page,
+    .users-page,
+    .penalties-page
+  ) .hero {
+    padding: 16px;
+  }
+
+  #app :is(.state-card, .empty-state) {
+    padding: 18px 14px;
+  }
+}
+
 
 
 /* a {

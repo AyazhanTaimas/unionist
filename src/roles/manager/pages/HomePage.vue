@@ -25,4 +25,15 @@
   margin: 0;
   color: #4b5563;
 }
+
+@media (max-width: 700px) {
+  .manager-home {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .manager-home h1 {
+    font-size: 24px;
+  }
+}
 </style>

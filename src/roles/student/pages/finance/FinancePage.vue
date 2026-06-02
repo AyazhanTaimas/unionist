@@ -513,4 +513,91 @@ onMounted(() => {
     flex-wrap: wrap;
   }
 }
+
+@media (max-width: 700px) {
+  .finance-page {
+    height: auto;
+    margin-top: 32px;
+    padding: 0;
+  }
+
+  .finance-card {
+    padding: 14px;
+    border-radius: 24px;
+  }
+
+  .accent-line {
+    display: none;
+  }
+
+  .finance-summary {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .finance-summary__title {
+    font-size: 22px;
+  }
+
+  .finance-summary__subtitle {
+    font-size: 12px;
+  }
+
+  .tabs {
+    gap: 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .charge-row {
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .charge-meta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .charge-topline {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .pay-btn,
+  .pay-btn.small {
+    width: 100%;
+    padding: 12px 16px;
+  }
+
+  .empty-state {
+    padding: 22px 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .charge-topline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .charge-amount,
+  .charge-date,
+  .paid-label {
+    font-size: 15px;
+  }
+}
 </style>

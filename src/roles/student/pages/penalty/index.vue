@@ -675,4 +675,82 @@ onMounted(() => {
     align-items: flex-start;
   }
 }
+
+@media (max-width: 700px) {
+  .penalty-page {
+    margin-top: 56px;
+  }
+
+  .penalty-card-wrapper {
+    margin-top: 0;
+  }
+
+  .accent-line {
+    display: none;
+  }
+
+  .penalty-card {
+    margin-left: 0;
+    padding: 16px;
+    border-radius: 24px;
+  }
+
+  .summary-box {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .summary-title {
+    font-size: 22px;
+  }
+
+  .summary-btn {
+    width: 100%;
+    min-height: 42px;
+  }
+
+  .detail-header {
+    align-items: stretch;
+  }
+
+  .detail-title {
+    font-size: 20px;
+  }
+
+  .rules-link {
+    display: block;
+    margin: 6px 0 0;
+  }
+
+  .image-card {
+    height: 140px;
+    border-radius: 18px;
+  }
+
+  .modal {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    padding: 18px 16px;
+    border-radius: 22px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .save-btn,
+  .cancel-btn {
+    min-height: 42px;
+  }
+}
+
+@media (max-width: 420px) {
+  .penalty-card {
+    padding: 14px;
+  }
+
+  .summary-title {
+    font-size: 20px;
+  }
+}
 </style>

@@ -1090,17 +1090,40 @@ button:disabled {
     flex-direction: column;
   }
 
+  .hero-image {
+    min-height: 200px;
+  }
+
+  .membership-head,
+  .calendar-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .membership-stats {
     grid-template-columns: 1fr;
   }
 
+  .membership-price,
+  .purchase-plan-price {
+    white-space: normal;
+  }
+
+  .calendar-nav {
+    width: 100%;
+  }
+
+  .calendar-nav-btn {
+    flex: 1;
+  }
+
   .calendar-grid {
-    gap: 8px;
+    gap: 6px;
   }
 
   .calendar-cell {
-    min-height: 62px;
-    border-radius: 16px;
+    min-height: 54px;
+    border-radius: 14px;
   }
 
   .calendar-day {
@@ -1109,6 +1132,38 @@ button:disabled {
 
   .calendar-minutes {
     font-size: 0.68rem;
+  }
+
+  .section-lock-banner {
+    inset: auto 18px 18px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-card,
+  .membership-card,
+  .metric-card,
+  .calendar-card {
+    padding: 14px;
+  }
+
+  .calendar-weekdays {
+    gap: 6px;
+  }
+
+  .calendar-weekdays span {
+    font-size: 0.68rem;
+    letter-spacing: 0;
+  }
+
+  .calendar-cell {
+    min-height: 48px;
+    gap: 3px;
+    border-radius: 12px;
+  }
+
+  .calendar-minutes {
+    font-size: 0.62rem;
   }
 }
 </style>
