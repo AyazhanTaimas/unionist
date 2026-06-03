@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '@/app/i18n'
 
 const props = defineProps<{
   buildingName: string
@@ -12,8 +13,14 @@ defineEmits<{
   (e: 'evict'): void
 }>()
 
+const { t } = useI18n()
+
 const residenceLine = computed(
-  () => `${props.buildingName}, ${props.floorNumber} этаж, комната ${props.roomNumber}`
+  () => t('pages.housing.residenceLine', {
+    building: props.buildingName,
+    floor: props.floorNumber,
+    room: props.roomNumber,
+  })
 )
 </script>
 
@@ -21,16 +28,14 @@ const residenceLine = computed(
   <section class="residence-page">
     <div class="hero">
       <div>
-        <p class="eyebrow">Student / Housing</p>
-        <h1>Проживание</h1>
+        <p class="eyebrow">{{ t('pages.housing.eyebrow') }}</p>
+        <h1>{{ t('pages.housing.title') }}</h1>
         <p class="subtitle">
-          Комната закреплена за вами. Здесь можно быстро запросить перевод в
-          другую комнату или оформить выселение без отдельного обращения в
-          администрацию.
+          {{ t('pages.housing.subtitle') }}
         </p>
 
         <div class="summary-card">
-          <span class="detail-label">Текущая комната</span>
+          <span class="detail-label">{{ t('pages.housing.currentRoom') }}</span>
           <strong>{{ residenceLine }}</strong>
         </div>
       </div>
@@ -38,33 +43,32 @@ const residenceLine = computed(
 
     <div class="stats">
       <article class="stat-card">
-        <span class="stat-label">Статус</span>
-        <strong>Заселены</strong>
+        <span class="stat-label">{{ t('pages.housing.statusLabel') }}</span>
+        <strong>{{ t('pages.housing.statusSettled') }}</strong>
       </article>
 
       <article class="stat-card">
-        <span class="stat-label">Корпус</span>
+        <span class="stat-label">{{ t('pages.housing.building') }}</span>
         <strong>{{ buildingName }}</strong>
       </article>
 
       <article class="stat-card">
-        <span class="stat-label">Этаж</span>
+        <span class="stat-label">{{ t('pages.housing.floorLabel') }}</span>
         <strong>{{ floorNumber }}</strong>
       </article>
 
       <article class="stat-card">
-        <span class="stat-label">Комната</span>
+        <span class="stat-label">{{ t('pages.housing.room') }}</span>
         <strong>{{ roomNumber }}</strong>
       </article>
     </div>
 
     <div class="actions-grid">
       <article class="action-card">
-        <span class="action-badge change">Новый запрос</span>
-        <h2>Смена комнаты</h2>
+        <span class="action-badge change">{{ t('pages.housing.newRequest') }}</span>
+        <h2>{{ t('pages.housing.changeRoomTitle') }}</h2>
         <p>
-          Откроется стандартный сценарий выбора корпуса, этажа и комнаты для
-          подачи новой заявки.
+          {{ t('pages.housing.changeRoomDescription') }}
         </p>
 
         <button
@@ -72,16 +76,15 @@ const residenceLine = computed(
           class="action-btn action-btn--primary"
           @click="$emit('change-room')"
         >
-          Поменять комнату
+          {{ t('pages.housing.changeRoomButton') }}
         </button>
       </article>
 
       <article class="action-card">
-        <span class="action-badge evict">Подтверждение</span>
-        <h2>Выселение</h2>
+        <span class="action-badge evict">{{ t('pages.housing.confirmation') }}</span>
+        <h2>{{ t('pages.housing.evictTitle') }}</h2>
         <p>
-          Если проживание завершено, отправьте запрос на выезд. Он будет
-          обработан администрацией отдельно.
+          {{ t('pages.housing.evictDescription') }}
         </p>
 
         <button
@@ -89,7 +92,7 @@ const residenceLine = computed(
           class="action-btn action-btn--danger"
           @click="$emit('evict')"
         >
-          Выселиться
+          {{ t('pages.housing.evictButton') }}
         </button>
       </article>
     </div>

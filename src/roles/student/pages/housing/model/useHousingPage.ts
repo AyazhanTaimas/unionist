@@ -1,5 +1,6 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { api } from '@/api/instance'
+import { useI18n } from '@/app/i18n'
 import { getBuildings, getFloors, getRooms } from '../housingApi'
 import { createLiveRequest } from '../request/requestApi'
 import { createChangeRoomRequest } from '../changeRoomApi'
@@ -12,6 +13,8 @@ import {
 } from '@/app/session/authStorage'
 
 export function useHousingPage() {
+  const { t } = useI18n()
+
   const buildings = ref<Building[]>([])
   const floors = ref<Floor[]>([])
   const rooms = ref<Room[]>([])
@@ -66,14 +69,17 @@ export function useHousingPage() {
 
   const residenceTitle = computed(() => {
     if (!currentResidence.value) return ''
-    return `Ваша комната: ${currentResidence.value.building_name}, этаж ${currentResidence.value.floor_number}, ${currentResidence.value.room_number} комната`
+    return t('pages.housing.residenceLine', {
+      building: currentResidence.value.building_name,
+      floor: currentResidence.value.floor_number,
+      room: currentResidence.value.room_number,
+    })
   })
 
   const submitButtonText = computed(() => {
-    if (submitting.value) return 'Отправка...'
-    if (changingRoom.value) return 'Отправка...'
-    if (isChangingRoom.value) return 'Поменять комнату'
-    return 'Заселиться'
+    if (submitting.value || changingRoom.value) return t('pages.housing.submitting')
+    if (isChangingRoom.value) return t('pages.housing.changeRoomButton')
+    return t('pages.housing.moveInButton')
   })
 
   function getUserId(): number | null {
@@ -174,11 +180,11 @@ export function useHousingPage() {
       evicting.value = true
 
       showEvictModal.value = false
-      successMessage.value = 'Запрос на выселение отправлен'
+      successMessage.value = t('pages.housing.evictSuccess')
       showSuccessModal.value = true
     } catch (e) {
       console.error(e)
-      alert('Не удалось отправить запрос на выселение')
+      alert(t('pages.housing.evictError'))
     } finally {
       evicting.value = false
     }
@@ -204,7 +210,7 @@ export function useHousingPage() {
           building_name:
             settlement.room?.floor?.building?.name ??
             settlement.room?.floor?.building?.address ??
-            'Корпус',
+            t('pages.housing.fallbackBuilding'),
           floor_number: settlement.room?.floor?.floor_number ?? 0,
           room_number: settlement.room?.room_number ?? '',
         }
@@ -228,11 +234,10 @@ export function useHousingPage() {
     try {
       submitting.value = true
 
-      const res = await createLiveRequest(selectedRoom.value.id)
+      await createLiveRequest(selectedRoom.value.id)
 
       hasSubmitted.value = true
-      successMessage.value =
-        res?.message || 'Заявка на заселение успешно отправлена'
+      successMessage.value = t('pages.housing.liveRequestSuccess')
       showSuccessModal.value = true
     } catch (e: any) {
       console.error(e)
@@ -245,12 +250,12 @@ export function useHousingPage() {
           data?.errors?.room_id?.[0] ||
             data?.errors?.preferred_room_id?.[0] ||
             data?.message ||
-            'Ошибка валидации'
+            t('pages.housing.validationError')
         )
         return
       }
 
-      alert(data?.message || 'Ошибка при отправке заявки')
+      alert(data?.message || t('pages.housing.submitError'))
     } finally {
       submitting.value = false
     }
@@ -262,10 +267,9 @@ export function useHousingPage() {
     try {
       changingRoom.value = true
 
-      const res = await createChangeRoomRequest(selectedRoom.value.id)
+      await createChangeRoomRequest(selectedRoom.value.id)
 
-      successMessage.value =
-        res?.message || 'Заявка на смену комнаты отправлена'
+      successMessage.value = t('pages.housing.changeRoomSuccess')
       showSuccessModal.value = true
       isChangingRoom.value = false
       hasSubmitted.value = true
@@ -280,12 +284,12 @@ export function useHousingPage() {
         alert(
           data?.errors?.preferred_room_id?.[0] ||
             data?.message ||
-            'Ошибка валидации'
+            t('pages.housing.validationError')
         )
         return
       }
 
-      alert(data?.message || 'Ошибка при отправке заявки')
+      alert(data?.message || t('pages.housing.submitError'))
     } finally {
       changingRoom.value = false
     }
@@ -308,7 +312,7 @@ export function useHousingPage() {
       buildings.value = await getBuildings()
     } catch (e) {
       console.error(e)
-      error.value = 'Не удалось загрузить корпуса'
+      error.value = t('pages.housing.loadBuildingsError')
       buildings.value = []
     } finally {
       loadingBuildings.value = false

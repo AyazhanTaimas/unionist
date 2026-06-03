@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useI18n } from '@/app/i18n'
+
 defineProps<{
   open: boolean
   evicting: boolean
@@ -8,22 +10,23 @@ defineEmits<{
   (e: 'close'): void
   (e: 'confirm'): void
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
   <transition name="modal-fade">
     <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
       <div class="modal confirm-modal">
-        <span class="modal-tag">Подтверждение</span>
-        <h3 class="confirm-title">Подтвердить выселение?</h3>
+        <span class="modal-tag">{{ t('pages.housing.confirmation') }}</span>
+        <h3 class="confirm-title">{{ t('pages.housing.confirmEvict') }}</h3>
         <p class="confirm-copy">
-          Мы отправим запрос администрации. Проживание изменится после
-          обработки заявки, а не сразу после нажатия кнопки.
+          {{ t('pages.housing.confirmEvictDescription') }}
         </p>
 
         <div class="confirm-actions">
           <button class="confirm-btn confirm-btn--cancel" @click="$emit('close')">
-            Отмена
+            {{ t('common.cancel') }}
           </button>
 
           <button
@@ -31,7 +34,7 @@ defineEmits<{
             :disabled="evicting"
             @click="$emit('confirm')"
           >
-            {{ evicting ? 'Отправка...' : 'Да' }}
+            {{ evicting ? t('pages.housing.submitting') : t('common.yes') }}
           </button>
         </div>
       </div>

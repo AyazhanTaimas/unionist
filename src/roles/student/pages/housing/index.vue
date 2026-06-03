@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '@/app/i18n'
 import HousingResidenceView from './housingResidence.vue'
 import HousingSelectionForm from './housingSelectionForm.vue'
 import HousingEvictModal from './housingEvictModal.vue'
@@ -44,6 +45,8 @@ const {
   setSelectedRoomId,
 } = useHousingPage()
 
+const { t } = useI18n()
+
 const showResidenceDashboard = computed(
   () => hasActiveResidence.value && !isChangingRoom.value && !!currentResidence.value
 )
@@ -62,7 +65,7 @@ const showResidenceDashboard = computed(
 
       <div class="card" :class="{ 'card--residence': showResidenceDashboard }">
         <template v-if="loadingStatus">
-          <div class="loading-box">Загрузка данных...</div>
+          <div class="loading-box">{{ t('common.loadingData') }}</div>
         </template>
 
         <template v-else-if="showResidenceDashboard && currentResidence">
@@ -77,7 +80,7 @@ const showResidenceDashboard = computed(
 
         <template v-else>
           <HousingSelectionForm
-            :title="isChangingRoom ? 'Смена комнаты' : 'Выбор комнаты'"
+            :title="isChangingRoom ? t('pages.housing.changeSelectionTitle') : t('pages.housing.selectionTitle')"
             :has-submitted="hasSubmitted"
             :error="error"
             :buildings="buildings"

@@ -2,12 +2,15 @@
 import { computed } from 'vue'
 import K3 from '@/assets/K3.png'
 import K4 from '@/assets/K4.png'
+import { useI18n } from '@/app/i18n'
 import type { Building, View } from './model/types'
 
 const props = defineProps<{
   currentView: View
   selectedBuilding: Building | null
 }>()
+
+const { t } = useI18n()
 
 const DEFAULT_LATITUDE = 43.238949
 const DEFAULT_LONGITUDE = 76.889709
@@ -66,14 +69,14 @@ const yandexMapSrc = computed(() => {
         v-else-if="currentView === 'room'"
         key="k3"
         :src="K3"
-        alt="Floor preview"
+        :alt="t('pages.housing.floorPreviewAlt')"
       />
 
       <img
         v-else-if="currentView=== 'roommap'"
         key="k4"
         :src="K4"
-        alt="Room preview"
+        :alt="t('pages.housing.roomPreviewAlt')"
       />
     </transition>
   </div>

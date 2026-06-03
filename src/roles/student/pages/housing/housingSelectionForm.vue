@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from '@/app/i18n'
 import type { Building, Floor, Room } from './model/types'
 
 defineProps<{
@@ -29,6 +30,8 @@ defineEmits<{
   (e: 'cancel-change'): void
 }>()
 
+const { t } = useI18n()
+
 function getBuildingLabel(building: Building) {
   if (building.name) {
     return `${building.name} (${building.address})`
@@ -43,7 +46,7 @@ function getBuildingLabel(building: Building) {
     <h2 class="title">{{ title }}</h2>
 
     <div v-if="hasSubmitted" class="request-info">
-      Заявка уже отправлена.
+      {{ t('pages.housing.requestAlreadySent') }}
     </div>
 
     <div v-if="error" class="error-box">
@@ -53,14 +56,14 @@ function getBuildingLabel(building: Building) {
     <div class="content-grid">
       <div class="form-card">
         <div class="field">
-          <label class="field__label">Корпус</label>
+          <label class="field__label">{{ t('pages.housing.building') }}</label>
           <select
             :value="selectedBuildingId ?? ''"
             class="field__input"
             :disabled="loadingBuildings"
             @change="$emit('update:selectedBuildingId', Number(($event.target as HTMLSelectElement).value) || null)"
           >
-            <option value="" disabled>Выберите корпус</option>
+            <option value="" disabled>{{ t('pages.housing.selectBuilding') }}</option>
             <option v-for="b in buildings" :key="b.id" :value="b.id">
               {{ getBuildingLabel(b) }}
             </option>
@@ -68,29 +71,29 @@ function getBuildingLabel(building: Building) {
         </div>
 
         <div class="field">
-          <label class="field__label">Этаж</label>
+          <label class="field__label">{{ t('pages.housing.floorLabel') }}</label>
           <select
             :value="selectedFloorId ?? ''"
             class="field__input"
             :disabled="!selectedBuildingId || loadingFloors"
             @change="$emit('update:selectedFloorId', Number(($event.target as HTMLSelectElement).value) || null)"
           >
-            <option value="" disabled>Выберите этаж</option>
+            <option value="" disabled>{{ t('pages.housing.selectFloor') }}</option>
             <option v-for="f in floors" :key="f.id" :value="f.id">
-              {{ f.floor_number }} этаж
+              {{ t('pages.housing.floorOption', { floor: f.floor_number }) }}
             </option>
           </select>
         </div>
 
         <div class="field">
-          <label class="field__label">Комната</label>
+          <label class="field__label">{{ t('pages.housing.room') }}</label>
           <select
             :value="selectedRoomId ?? ''"
             class="field__input"
             :disabled="!selectedFloorId || loadingRooms"
             @change="$emit('update:selectedRoomId', Number(($event.target as HTMLSelectElement).value) || null)"
           >
-            <option value="" disabled>Выберите комнату</option>
+            <option value="" disabled>{{ t('pages.housing.selectRoom') }}</option>
             <option v-for="r in rooms" :key="r.id" :value="r.id">
               {{ r.room_number }}
             </option>
@@ -113,7 +116,7 @@ function getBuildingLabel(building: Building) {
             type="button"
             @click="$emit('cancel-change')"
           >
-            Отмена
+            {{ t('common.cancel') }}
           </button>
         </div>
       </div>
