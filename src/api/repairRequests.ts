@@ -1,4 +1,5 @@
 import { api } from './instance'
+import { translate } from '@/app/i18n'
 
 export type RepairRequestCategory =
   | 'plumbing'
@@ -67,23 +68,24 @@ export interface RepairRequestItem {
 
 export const REPAIR_REQUEST_CATEGORY_OPTIONS: Array<{
   value: RepairRequestCategory
-  label: string
+  labelKey: string
 }> = [
-  { value: 'plumbing', label: 'Сантехника' },
-  { value: 'electricity', label: 'Электрика' },
-  { value: 'furniture', label: 'Мебель' },
-  { value: 'heating', label: 'Отопление' },
-  { value: 'other', label: 'Другое' },
+  { value: 'plumbing', labelKey: 'repair.categories.plumbing' },
+  { value: 'electricity', labelKey: 'repair.categories.electricity' },
+  { value: 'furniture', labelKey: 'repair.categories.furniture' },
+  { value: 'heating', labelKey: 'repair.categories.heating' },
+  { value: 'other', labelKey: 'repair.categories.other' },
 ]
 
-export const getRepairRequestCategoryLabel = (category: string) =>
-  REPAIR_REQUEST_CATEGORY_OPTIONS.find((item) => item.value === category)?.label ||
-  category
+export const getRepairRequestCategoryLabel = (category: string) => {
+  const option = REPAIR_REQUEST_CATEGORY_OPTIONS.find((item) => item.value === category)
+  return option ? translate(option.labelKey) : category
+}
 
 export const getRepairRequestStatusLabel = (status: RepairRequestStatus) => {
-  if (status === 'pending') return 'Новая'
-  if (status === 'in_progress') return 'В работе'
-  if (status === 'resolved') return 'Исправлено'
+  if (status === 'pending') return translate('repair.statuses.pending')
+  if (status === 'in_progress') return translate('repair.statuses.in_progress')
+  if (status === 'resolved') return translate('repair.statuses.resolved')
   return status
 }
 

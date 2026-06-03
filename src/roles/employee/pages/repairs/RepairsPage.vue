@@ -10,9 +10,11 @@ import {
   type RepairRequestItem,
   type RepairRequestStatus,
 } from '@/api/repairRequests'
+import { getDateLocale, useI18n } from '@/app/i18n'
 
 type FilterStatus = 'all' | 'pending' | 'in_progress' | 'resolved'
 
+const { t } = useI18n()
 const requests = ref<RepairRequestItem[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -65,7 +67,7 @@ const fetchRequests = async () => {
     requests.value = await getManagedRepairRequests()
   } catch (requestError: any) {
     error.value =
-      requestError?.response?.data?.message || 'Не удалось загрузить заявки на ремонт'
+      requestError?.response?.data?.message || t('repair.loadError')
     requests.value = []
   } finally {
     loading.value = false
@@ -73,12 +75,12 @@ const fetchRequests = async () => {
 }
 
 const formatDate = (value: string | null) => {
-  if (!value) return 'Дата неизвестна'
+  if (!value) return t('common.unknownDate')
 
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Дата неизвестна'
+  if (Number.isNaN(date.getTime())) return t('common.unknownDate')
 
-  return date.toLocaleString('ru-RU', {
+  return date.toLocaleString(getDateLocale(), {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -98,12 +100,12 @@ const getRoomLabel = (item: RepairRequestItem) => {
   const floor = room?.floor
   const building = floor?.building
 
-  if (!room) return 'Комната не указана'
+  if (!room) return t('pages.myRequests.noRoom')
 
-  const parts = [`Комната ${room.room_number || room.id}`]
+  const parts = [t('pages.housing.roomLabel', { room: room.room_number || room.id || '' })]
 
   if (floor?.floor_number != null) {
-    parts.push(`${floor.floor_number} этаж`)
+    parts.push(`${floor.floor_number} ${t('common.floor')}`)
   }
 
   if (building?.name) {
@@ -114,12 +116,12 @@ const getRoomLabel = (item: RepairRequestItem) => {
 }
 
 const getAddress = (item: RepairRequestItem) =>
-  item.room?.floor?.building?.address || 'Не указан'
+  item.room?.floor?.building?.address || t('common.notSpecified')
 
 const isActing = (key: string) => actionKey.value === key
 
 const takeInWork = async (item: RepairRequestItem) => {
-  const confirmed = window.confirm(`Взять заявку "${item.title}" в работу?`)
+  const confirmed = window.confirm(t('repair.confirmStart', { title: item.title }))
   if (!confirmed) return
 
   actionKey.value = `start-${item.id}`
@@ -132,7 +134,7 @@ const takeInWork = async (item: RepairRequestItem) => {
     await fetchRequests()
   } catch (requestError: any) {
     error.value =
-      requestError?.response?.data?.message || 'Не удалось взять заявку в работу'
+      requestError?.response?.data?.message || t('repair.startError')
   } finally {
     actionKey.value = null
   }
@@ -140,7 +142,7 @@ const takeInWork = async (item: RepairRequestItem) => {
 
 const markResolved = async (item: RepairRequestItem) => {
   const comment = window.prompt(
-    'Комментарий по выполненной работе (необязательно)',
+    t('repair.promptResolve'),
     item.employee_comment || ''
   )
 
@@ -156,7 +158,7 @@ const markResolved = async (item: RepairRequestItem) => {
     await fetchRequests()
   } catch (requestError: any) {
     error.value =
-      requestError?.response?.data?.message || 'Не удалось закрыть заявку'
+      requestError?.response?.data?.message || t('repair.resolveError')
   } finally {
     actionKey.value = null
   }
@@ -169,37 +171,36 @@ onMounted(fetchRequests)
   <section class="repairs-page">
     <div class="hero">
       <div>
-        <p class="eyebrow">Employee / Repairs</p>
-        <h1>Заявки на ремонт</h1>
+        <p class="eyebrow">{{ t('repair.employeeEyebrow') }}</p>
+        <h1>{{ t('repair.employeeHeroTitle') }}</h1>
         <p class="subtitle">
-          Здесь сотрудник общежития получает заявки от студентов, берёт их в
-          работу и отмечает после устранения проблемы.
+          {{ t('repair.employeeHeroSubtitle') }}
         </p>
       </div>
 
       <button class="secondary-btn" :disabled="loading" @click="fetchRequests">
-        {{ loading ? 'Обновление...' : 'Обновить' }}
+        {{ loading ? t('common.refreshing') : t('common.refresh') }}
       </button>
     </div>
 
     <div class="stats">
       <article class="stat-card">
-        <span>Всего заявок</span>
+        <span>{{ t('repair.totalRequests') }}</span>
         <strong>{{ stats.total }}</strong>
       </article>
 
       <article class="stat-card warning">
-        <span>Новые</span>
+        <span>{{ t('repair.newRequests') }}</span>
         <strong>{{ stats.pending }}</strong>
       </article>
 
       <article class="stat-card info">
-        <span>В работе</span>
+        <span>{{ t('repair.statuses.in_progress') }}</span>
         <strong>{{ stats.inProgress }}</strong>
       </article>
 
       <article class="stat-card success">
-        <span>Исправлено</span>
+        <span>{{ t('repair.statuses.resolved') }}</span>
         <strong>{{ stats.resolved }}</strong>
       </article>
     </div>
@@ -209,14 +210,14 @@ onMounted(fetchRequests)
         v-model="search"
         class="search-input"
         type="search"
-        placeholder="Поиск по студенту, комнате или описанию"
+        :placeholder="t('repair.searchPlaceholder')"
       />
 
       <select v-model="statusFilter" class="filter-select">
-        <option value="all">Все статусы</option>
-        <option value="pending">Новые</option>
-        <option value="in_progress">В работе</option>
-        <option value="resolved">Исправлено</option>
+        <option value="all">{{ t('repair.allStatuses') }}</option>
+        <option value="pending">{{ t('repair.newRequests') }}</option>
+        <option value="in_progress">{{ t('repair.statuses.in_progress') }}</option>
+        <option value="resolved">{{ t('repair.statuses.resolved') }}</option>
       </select>
     </div>
 
@@ -224,11 +225,11 @@ onMounted(fetchRequests)
     <div v-if="error" class="notice error">{{ error }}</div>
 
     <div v-if="loading && !requests.length" class="state-card">
-      Загрузка заявок...
+      {{ t('repair.loadingRequests') }}
     </div>
 
     <div v-else-if="!filteredRequests.length" class="state-card">
-      По текущим фильтрам заявок не найдено.
+      {{ t('repair.emptyFilter') }}
     </div>
 
     <div v-else class="request-list">
@@ -247,9 +248,9 @@ onMounted(fetchRequests)
             </div>
             <h2>{{ item.title }}</h2>
             <p class="student-row">
-              {{ item.student?.full_name || 'Студент не найден' }}
+              {{ item.student?.full_name || t('repair.studentMissing') }}
               <span class="dot">•</span>
-              {{ item.student?.email || 'Без email' }}
+              {{ item.student?.email || t('common.noEmail') }}
             </p>
           </div>
 
@@ -262,35 +263,35 @@ onMounted(fetchRequests)
 
         <div class="details-grid">
           <div class="detail-card">
-            <span class="detail-label">Комната</span>
+            <span class="detail-label">{{ t('common.room') }}</span>
             <span class="detail-value">{{ getRoomLabel(item) }}</span>
           </div>
 
           <div class="detail-card">
-            <span class="detail-label">Адрес</span>
+            <span class="detail-label">{{ t('common.address') }}</span>
             <span class="detail-value">{{ getAddress(item) }}</span>
           </div>
 
           <div class="detail-card">
-            <span class="detail-label">Создана</span>
+            <span class="detail-label">{{ t('repair.createdAt') }}</span>
             <span class="detail-value">{{ formatDate(item.created_at) }}</span>
           </div>
 
           <div class="detail-card">
-            <span class="detail-label">Исполнитель</span>
+            <span class="detail-label">{{ t('repair.executor') }}</span>
             <span class="detail-value">
-              {{ item.handled_by?.full_name || item.handled_by?.email || 'Пока не назначен' }}
+              {{ item.handled_by?.full_name || item.handled_by?.email || t('repair.unassigned') }}
             </span>
           </div>
         </div>
 
         <div v-if="item.employee_comment" class="comment-box">
-          <span class="detail-label">Комментарий сотрудника</span>
+          <span class="detail-label">{{ t('repair.employeeComment') }}</span>
           <span class="detail-value">{{ item.employee_comment }}</span>
         </div>
 
         <div v-if="item.attachments.length" class="attachments">
-          <span class="detail-label">Фото от студента</span>
+          <span class="detail-label">{{ t('repair.studentPhotos') }}</span>
           <div class="attachment-list">
             <a
               v-for="attachment in item.attachments"
@@ -300,7 +301,7 @@ onMounted(fetchRequests)
               target="_blank"
               rel="noopener noreferrer"
             >
-              Фото {{ attachment.id }}
+              {{ t('repair.photo', { id: attachment.id }) }}
             </a>
           </div>
         </div>
@@ -312,7 +313,7 @@ onMounted(fetchRequests)
             :disabled="isActing(`start-${item.id}`) || isActing(`resolve-${item.id}`)"
             @click="takeInWork(item)"
           >
-            {{ isActing(`start-${item.id}`) ? 'Назначение...' : 'Взять в работу' }}
+            {{ isActing(`start-${item.id}`) ? t('repair.startLoading') : t('repair.startAction') }}
           </button>
 
           <button
@@ -320,7 +321,7 @@ onMounted(fetchRequests)
             :disabled="isActing(`start-${item.id}`) || isActing(`resolve-${item.id}`)"
             @click="markResolved(item)"
           >
-            {{ isActing(`resolve-${item.id}`) ? 'Закрытие...' : 'Отметить как исправлено' }}
+            {{ isActing(`resolve-${item.id}`) ? t('repair.resolveLoading') : t('repair.resolveAction') }}
           </button>
         </div>
       </article>

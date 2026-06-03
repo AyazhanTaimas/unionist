@@ -2,8 +2,8 @@
   <div class="cancel-page">
     <div class="card">
       <div class="icon">⚠️</div>
-      <h1>Оплата отменена</h1>
-      <p>Платеж не был завершен. Вы можете попробовать снова.</p>
+      <h1>{{ t('pages.finance.paymentCancel') }}</h1>
+      <p>{{ t('pages.finance.cancelDescription') }}</p>
       <button @click="goPrimary">{{ primaryButtonText }}</button>
     </div>
   </div>
@@ -13,13 +13,15 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRoute } from 'vue-router'
+import { useI18n } from '@/app/i18n'
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 
 const isGymPayment = computed(() => route.query.source === 'gym')
 const primaryButtonText = computed(() =>
-  isGymPayment.value ? 'Вернуться в тренажерный зал' : 'Вернуться к оплате'
+  isGymPayment.value ? t('pages.finance.backToGym') : t('pages.finance.backToPayment')
 )
 
 function goPrimary() {

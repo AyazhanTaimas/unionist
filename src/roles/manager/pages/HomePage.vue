@@ -1,7 +1,13 @@
+<script setup lang="ts">
+import { useI18n } from '@/app/i18n'
+
+const { t } = useI18n()
+</script>
+
 <template>
   <div class="manager-home">
-    <h1>Manager</h1>
-    <p>Раздел менеджера.</p>
+    <h1>{{ t('pages.managerHome.title') }}</h1>
+    <p>{{ t('pages.managerHome.subtitle') }}</p>
   </div>
 </template>
 

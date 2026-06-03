@@ -5,12 +5,12 @@ import PenaltyIcon from '@/roles/student/shared/layout/ui/icons/PenaltyIcon.vue'
 
 export const dormAdminMenu: SidebarItem[] = [
   {
-    label: 'Новости',
+    labelKey: 'nav.news',
     route: '/dorm-admin/news',
     icon: HomeIcon,
   },
   {
-    label: 'Штрафы',
+    labelKey: 'nav.penalty',
     route: '/dorm-admin/penalties',
     icon: PenaltyIcon,
   },

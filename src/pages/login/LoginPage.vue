@@ -7,8 +7,11 @@ import {
   resetDormAccessState,
 } from '@/roles/student/shared/lib/dormAccess'
 import { setAuthSession } from '@/app/session/authStorage'
+import LanguageSwitcher from '@/app/i18n/LanguageSwitcher.vue'
+import { useI18n } from '@/app/i18n'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const email = ref('')
 const password = ref('')
@@ -47,7 +50,7 @@ const handleLogin = async () => {
       router.push('/news')
     }
   } catch (e: any) {
-    error.value = 'Invalid email or password'
+    error.value = t('auth.invalidCredentials')
   } finally {
     loading.value = false
   }
@@ -56,32 +59,36 @@ const handleLogin = async () => {
 
 <template>
   <div class="login-page">
+    <div class="login-language">
+      <LanguageSwitcher />
+    </div>
+
     <img src="@/assets/Group 26.svg" class="logo" />
 
     <div class="login-card">
-      <h2>E-mail</h2>
+      <h2>{{ t('auth.emailLabel') }}</h2>
       <input
         v-model="email"
         type="email"
-        placeholder="Enter your email"
+        :placeholder="t('auth.emailPlaceholder')"
       />
 
-      <h2>Password</h2>
+      <h2>{{ t('auth.passwordLabel') }}</h2>
       <div class="password-wrapper">
         <input
           v-model="password"
           type="password"
-          placeholder="Enter your password"
+          :placeholder="t('auth.passwordPlaceholder')"
         />
       </div>
 
-      <div class="forgot">Forgot your password?</div>
+      <div class="forgot">{{ t('auth.forgotPassword') }}</div>
 
       <button
         :disabled="loading"
         @click="handleLogin"
       >
-        {{ loading ? 'Signing in...' : 'Sign in' }}
+        {{ loading ? t('auth.signingIn') : t('auth.signIn') }}
       </button>
 
       <div v-if="error" class="error">
@@ -93,6 +100,7 @@ const handleLogin = async () => {
 
 <style scoped lang="scss">
 .login-page {
+  position: relative;
   min-height: 100vh;
   min-height: 100dvh;
   padding: 32px 20px;
@@ -102,6 +110,12 @@ const handleLogin = async () => {
   align-items: center;
   justify-content: center;
   gap: 40px;
+}
+
+.login-language {
+  position: absolute;
+  top: 24px;
+  right: 24px;
 }
 
 .logo {
@@ -168,6 +182,11 @@ button {
   .login-page {
     gap: 28px;
     padding: 24px 16px;
+  }
+
+  .login-language {
+    top: 14px;
+    right: 14px;
   }
 
   .login-card {

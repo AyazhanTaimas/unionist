@@ -10,9 +10,11 @@ import {
   type RepairRequestItem,
   type RepairRequestStatus,
 } from '@/api/repairRequests'
+import { getDateLocale, useI18n } from '@/app/i18n'
 
 type RepairsTab = 'all' | 'open' | 'resolved'
 
+const { t } = useI18n()
 const requests = ref<RepairRequestItem[]>([])
 const loading = ref(false)
 const submitting = ref(false)
@@ -61,14 +63,14 @@ const filteredRequests = computed(() =>
 
 const emptyStateText = computed(() => {
   if (activeTab.value === 'open') {
-    return 'Сейчас у вас нет активных заявок на ремонт.'
+    return t('repair.openEmpty')
   }
 
   if (activeTab.value === 'resolved') {
-    return 'Исполненные заявки пока отсутствуют.'
+    return t('repair.resolvedEmpty')
   }
 
-  return 'Вы ещё не отправляли заявки на ремонт.'
+  return t('repair.allEmpty')
 })
 
 const fetchRequests = async () => {
@@ -79,7 +81,7 @@ const fetchRequests = async () => {
     requests.value = await getMyRepairRequests()
   } catch (requestError: any) {
     error.value =
-      requestError?.response?.data?.message || 'Не удалось загрузить заявки на ремонт'
+      requestError?.response?.data?.message || t('repair.loadError')
     requests.value = []
   } finally {
     loading.value = false
@@ -105,7 +107,7 @@ const submitRequest = async () => {
   notice.value = null
 
   if (!form.value.title.trim() || !form.value.description.trim()) {
-    error.value = 'Заполните название и описание проблемы'
+    error.value = t('repair.validationRequired')
     return
   }
 
@@ -131,19 +133,19 @@ const submitRequest = async () => {
       responseData?.errors?.description?.[0] ||
       responseData?.errors?.title?.[0] ||
       responseData?.message ||
-      'Не удалось отправить заявку'
+      t('repair.submitError')
   } finally {
     submitting.value = false
   }
 }
 
 const formatDate = (value: string | null) => {
-  if (!value) return 'Дата неизвестна'
+  if (!value) return t('common.unknownDate')
 
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Дата неизвестна'
+  if (Number.isNaN(date.getTime())) return t('common.unknownDate')
 
-  return date.toLocaleString('ru-RU', {
+  return date.toLocaleString(getDateLocale(), {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -163,12 +165,12 @@ const getRoomLabel = (item: RepairRequestItem) => {
   const floor = room?.floor
   const building = floor?.building
 
-  if (!room) return 'Комната не указана'
+  if (!room) return t('pages.myRequests.noRoom')
 
-  const parts = [`Комната ${room.room_number || room.id}`]
+  const parts = [t('pages.housing.roomLabel', { room: room.room_number || room.id || '' })]
 
   if (floor?.floor_number != null) {
-    parts.push(`${floor.floor_number} этаж`)
+    parts.push(`${floor.floor_number} ${t('common.floor')}`)
   }
 
   if (building?.name) {
@@ -179,7 +181,7 @@ const getRoomLabel = (item: RepairRequestItem) => {
 }
 
 const getAddress = (item: RepairRequestItem) =>
-  item.room?.floor?.building?.address || 'Не указан'
+  item.room?.floor?.building?.address || t('common.notSpecified')
 
 onMounted(fetchRequests)
 </script>
@@ -188,85 +190,83 @@ onMounted(fetchRequests)
   <section class="repairs-page">
     <div class="hero">
       <div>
-        <p class="eyebrow">Student / Repairs</p>
-        <h1>Заявка на ремонт</h1>
+        <p class="eyebrow">{{ t('repair.studentEyebrow') }}</p>
+        <h1>{{ t('repair.studentHeroTitle') }}</h1>
         <p class="subtitle">
-          Если в комнате что-то сломалось, отправьте запрос сотруднику
-          общежития. Заявка автоматически привяжется к вашей активной комнате,
-          а фото можно приложить по желанию.
+          {{ t('repair.studentHeroSubtitle') }}
         </p>
       </div>
 
       <button class="refresh-btn" :disabled="loading" @click="fetchRequests">
-        {{ loading ? 'Обновление...' : 'Обновить' }}
+        {{ loading ? t('common.refreshing') : t('common.refresh') }}
       </button>
     </div>
 
     <div class="stats">
       <article class="stat-card">
-        <span class="stat-label">Всего</span>
+        <span class="stat-label">{{ t('common.total') }}</span>
         <strong>{{ totalCount }}</strong>
       </article>
 
       <article class="stat-card">
-        <span class="stat-label">Активные</span>
+        <span class="stat-label">{{ t('common.active') }}</span>
         <strong>{{ openCount }}</strong>
       </article>
 
       <article class="stat-card">
-        <span class="stat-label">В работе</span>
+        <span class="stat-label">{{ t('repair.statuses.in_progress') }}</span>
         <strong>{{ inProgressCount }}</strong>
       </article>
 
       <article class="stat-card">
-        <span class="stat-label">Исправлено</span>
+        <span class="stat-label">{{ t('repair.statuses.resolved') }}</span>
         <strong>{{ resolvedCount }}</strong>
       </article>
     </div>
 
     <div class="content-grid">
       <div class="form-card">
-        <h2>Новая заявка</h2>
+        <h2>{{ t('repair.newRequest') }}</h2>
 
         <div v-if="notice" class="notice success">{{ notice }}</div>
         <div v-if="error" class="notice error">{{ error }}</div>
 
         <label class="field">
-          <span class="field-label">Категория</span>
+          <span class="field-label">{{ t('repair.category') }}</span>
           <select v-model="form.category" class="field-input">
             <option
               v-for="option in REPAIR_REQUEST_CATEGORY_OPTIONS"
               :key="option.value"
               :value="option.value"
             >
-              {{ option.label }}
+              {{ t(option.labelKey) }}
             </option>
           </select>
         </label>
 
         <label class="field">
-          <span class="field-label">Кратко о проблеме</span>
+          <span class="field-label">{{ t('repair.shortProblem') }}</span>
           <input
             v-model="form.title"
             class="field-input"
             type="text"
             maxlength="255"
-            placeholder="Например: Сломался кран"
+            :placeholder="t('repair.shortProblemPlaceholder')"
           />
         </label>
 
         <label class="field">
-          <span class="field-label">Описание</span>
+          <span class="field-label">{{ t('repair.description') }}</span>
           <textarea
             v-model="form.description"
             class="field-input field-input--textarea"
             maxlength="2000"
-            placeholder="Опишите, что именно случилось и когда это заметили"
+            :placeholder="t('repair.descriptionPlaceholder')"
           />
         </label>
 
         <label class="field">
-          <span class="field-label">Фото (необязательно)</span>
+          <span class="field-label">{{ t('repair.optionalPhoto') }}</span>
           <input
             class="field-input field-input--file"
             type="file"
@@ -277,7 +277,7 @@ onMounted(fetchRequests)
         </label>
 
         <div v-if="selectedFiles.length" class="files-box">
-          <span class="field-label">Выбрано файлов: {{ selectedFiles.length }}</span>
+          <span class="field-label">{{ t('repair.selectedFiles', { count: selectedFiles.length }) }}</span>
           <div class="file-list">
             <span v-for="file in selectedFiles" :key="file.name" class="file-chip">
               {{ file.name }}
@@ -290,16 +290,16 @@ onMounted(fetchRequests)
           :disabled="submitting"
           @click="submitRequest"
         >
-          {{ submitting ? 'Отправка...' : 'Отправить заявку' }}
+          {{ submitting ? t('common.sending') : t('repair.submitRequest') }}
         </button>
       </div>
 
       <div class="info-card">
-        <h2>Как это работает</h2>
+        <h2>{{ t('repair.howItWorks') }}</h2>
         <ol class="steps-list">
-          <li>Вы описываете проблему и при необходимости прикладываете фото.</li>
-          <li>Сотрудник общежития видит заявку и переводит её в работу.</li>
-          <li>После ремонта заявка закрывается, а комментарий отображается в истории.</li>
+          <li>{{ t('repair.stepDescribe') }}</li>
+          <li>{{ t('repair.stepEmployee') }}</li>
+          <li>{{ t('repair.stepClose') }}</li>
         </ol>
       </div>
     </div>
@@ -310,7 +310,7 @@ onMounted(fetchRequests)
         :class="{ active: activeTab === 'all' }"
         @click="activeTab = 'all'"
       >
-        Все
+        {{ t('common.all') }}
         <span class="tab-count">{{ totalCount }}</span>
       </button>
 
@@ -319,7 +319,7 @@ onMounted(fetchRequests)
         :class="{ active: activeTab === 'open' }"
         @click="activeTab = 'open'"
       >
-        Активные
+        {{ t('common.active') }}
         <span class="tab-count">{{ openCount }}</span>
       </button>
 
@@ -328,12 +328,12 @@ onMounted(fetchRequests)
         :class="{ active: activeTab === 'resolved' }"
         @click="activeTab = 'resolved'"
       >
-        Исправлено
+        {{ t('repair.statuses.resolved') }}
         <span class="tab-count">{{ resolvedCount }}</span>
       </button>
     </div>
 
-    <div v-if="loading && !requests.length" class="state-card">Загрузка заявок...</div>
+    <div v-if="loading && !requests.length" class="state-card">{{ t('repair.loadingRequests') }}</div>
 
     <div v-else-if="!filteredRequests.length" class="state-card">
       {{ emptyStateText }}
@@ -365,38 +365,38 @@ onMounted(fetchRequests)
 
         <div class="details-grid">
           <div class="detail-card">
-            <span class="detail-label">Комната</span>
+            <span class="detail-label">{{ t('common.room') }}</span>
             <span class="detail-value">{{ getRoomLabel(item) }}</span>
           </div>
 
           <div class="detail-card">
-            <span class="detail-label">Адрес</span>
+            <span class="detail-label">{{ t('common.address') }}</span>
             <span class="detail-value">{{ getAddress(item) }}</span>
           </div>
 
           <div class="detail-card">
-            <span class="detail-label">Создана</span>
+            <span class="detail-label">{{ t('repair.createdAt') }}</span>
             <span class="detail-value">{{ formatDate(item.created_at) }}</span>
           </div>
 
           <div class="detail-card">
-            <span class="detail-label">Обновлена</span>
+            <span class="detail-label">{{ t('common.updatedAt') }}</span>
             <span class="detail-value">{{ formatDate(item.updated_at) }}</span>
           </div>
         </div>
 
         <div v-if="item.handled_by" class="comment-box">
-          <span class="detail-label">Сотрудник</span>
+          <span class="detail-label">{{ t('repair.employee') }}</span>
           <span class="detail-value">{{ item.handled_by.full_name || item.handled_by.email }}</span>
         </div>
 
         <div v-if="item.employee_comment" class="comment-box">
-          <span class="detail-label">Комментарий сотрудника</span>
+          <span class="detail-label">{{ t('repair.employeeComment') }}</span>
           <span class="detail-value">{{ item.employee_comment }}</span>
         </div>
 
         <div v-if="item.attachments.length" class="attachments">
-          <span class="detail-label">Фотографии</span>
+          <span class="detail-label">{{ t('common.photos') }}</span>
           <div class="attachment-list">
             <a
               v-for="attachment in item.attachments"
@@ -406,7 +406,7 @@ onMounted(fetchRequests)
               target="_blank"
               rel="noopener noreferrer"
             >
-              Фото {{ attachment.id }}
+              {{ t('repair.photo', { id: attachment.id }) }}
             </a>
           </div>
         </div>

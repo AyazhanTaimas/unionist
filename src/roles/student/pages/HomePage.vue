@@ -1,6 +1,12 @@
+<script setup lang="ts">
+import { useI18n } from '@/app/i18n'
+
+const { t } = useI18n()
+</script>
+
 <template>
   <div class="student-home">
-    <h1>Новости</h1>
+    <h1>{{ t('nav.news') }}</h1>
   </div>
 </template>
 

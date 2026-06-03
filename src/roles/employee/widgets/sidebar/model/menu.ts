@@ -5,12 +5,12 @@ import RequestIcon from '@/roles/student/shared/layout/ui/icons/RequestIcon.vue'
 
 export const employeeMenu: SidebarItem[] = [
   {
-    label: 'Новости',
+    labelKey: 'nav.news',
     route: '/employee/news',
     icon: HomeIcon,
   },
   {
-    label: 'Ремонт',
+    labelKey: 'nav.repairs',
     route: '/employee/repairs',
     icon: RequestIcon,
   },

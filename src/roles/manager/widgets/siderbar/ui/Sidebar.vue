@@ -3,8 +3,10 @@ import { managerMenu } from '../model/menu'
 import SidebarItem from './SidebarItem.vue'
 import HeaderLogo from '@/roles/student/widgets/header/ui/HeaderLogo.vue' // можно потом вынести в shared
 import { useAppShell } from '@/app/providers/layout/useAppShell'
+import { useI18n } from '@/app/i18n'
 
 const { isMobileViewport, isSidebarOpen, closeSidebar } = useAppShell()
+const { t } = useI18n()
 </script>
 
 <template>
@@ -14,7 +16,7 @@ const { isMobileViewport, isSidebarOpen, closeSidebar } = useAppShell()
       class="sidebar-overlay"
       :class="{ 'sidebar-overlay--visible': isSidebarOpen }"
       type="button"
-      aria-label="Закрыть меню"
+      :aria-label="t('common.closeMenu')"
       @click="closeSidebar"
     />
 
@@ -28,7 +30,7 @@ const { isMobileViewport, isSidebarOpen, closeSidebar } = useAppShell()
           v-if="isMobileViewport"
           class="sidebar-close"
           type="button"
-          aria-label="Закрыть меню"
+          :aria-label="t('common.closeMenu')"
           @click="closeSidebar"
         >
           x

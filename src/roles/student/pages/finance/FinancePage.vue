@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { getFinanceCharges, openCheckout, type FinanceCharge } from './financeApi'
+import { getDateLocale, useI18n } from '@/app/i18n'
 
 type ChargeTab = 'payments' | 'penalty'
 type ChargeKind = 'housing' | 'penalty' | 'gym' | 'other'
@@ -19,6 +20,7 @@ interface Charge {
 }
 
 const activeTab = ref<ChargeTab>('payments')
+const { t } = useI18n()
 const loadingId = ref<number | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -29,7 +31,7 @@ function formatDate(value?: string | null) {
   if (!value) return undefined
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString('ru-RU')
+  return date.toLocaleDateString(getDateLocale())
 }
 
 function normalizeKind(type: string): ChargeKind {
@@ -53,22 +55,22 @@ function getChargePresentation(kind: ChargeKind, rawType: string) {
   switch (kind) {
     case 'housing':
       return {
-        title: 'Оплата проживания',
-        subtitle: 'Начисление за проживание в общежитии',
+        title: t('pages.finance.housingChargeTitle'),
+        subtitle: t('pages.finance.housingChargeSubtitle'),
       }
     case 'gym':
       return {
-        title: 'Оплата абонемента в зал',
-        subtitle: 'Тренажерный зал',
+        title: t('pages.finance.gymChargeTitle'),
+        subtitle: t('pages.finance.gymChargeSubtitle'),
       }
     case 'penalty':
       return {
-        title: 'Штраф',
-        subtitle: 'Дисциплинарное начисление',
+        title: t('pages.finance.penaltyChargeTitle'),
+        subtitle: t('pages.finance.penaltyChargeSubtitle'),
       }
     default:
       return {
-        title: 'Другая оплата',
+        title: t('pages.finance.otherChargeTitle'),
         subtitle: rawType.replace(/_/g, ' '),
       }
   }
@@ -102,7 +104,7 @@ async function loadCharges() {
       .map(mapCharge)
   } catch (e) {
     console.error(e)
-    error.value = 'Не удалось загрузить начисления'
+    error.value = t('pages.finance.loadChargesError')
     charges.value = []
   } finally {
     loading.value = false
@@ -129,15 +131,15 @@ const currentTotal = computed(() =>
 
 const summaryTitle = computed(() => {
   if (activeTab.value === 'penalty') {
-    return `Общая сумма штрафов: ${formatAmount(currentTotal.value)}`
+    return t('pages.finance.totalPenaltyAmount', { amount: formatAmount(currentTotal.value) })
   }
 
-  return `Общая сумма оплат: ${formatAmount(currentTotal.value)}`
+  return t('pages.finance.totalPaymentAmount', { amount: formatAmount(currentTotal.value) })
 })
 
 const summarySubtitle = computed(() => {
   if (activeTab.value === 'penalty') {
-    return 'Проверьте неоплаченные штрафы'
+    return t('pages.finance.penaltySubtitle')
   }
 
   const unpaidKinds = Array.from(
@@ -149,22 +151,22 @@ const summarySubtitle = computed(() => {
   )
 
   if (!unpaidKinds.length) {
-    return 'Все текущие оплаты закрыты'
+    return t('pages.finance.allClosed')
   }
 
   if (unpaidKinds.length === 1 && unpaidKinds[0] === 'gym') {
-    return 'Доступна неоплаченная покупка абонемента в зал'
+    return t('pages.finance.gymUnpaid')
   }
 
   if (unpaidKinds.length === 1 && unpaidKinds[0] === 'housing') {
-    return 'Есть неоплаченные начисления за проживание'
+    return t('pages.finance.housingUnpaid')
   }
 
-  return 'Есть несколько типов неоплаченных начислений'
+  return t('pages.finance.multipleUnpaid')
 })
 
 function formatAmount(value: number) {
-  return new Intl.NumberFormat('ru-RU').format(value) + ' ₸'
+  return new Intl.NumberFormat(getDateLocale()).format(value) + ' ₸'
 }
 
 async function handlePay(chargeId: number) {
@@ -174,14 +176,14 @@ async function handlePay(chargeId: number) {
     const checkoutUrl = await openCheckout(chargeId)
 
     if (!checkoutUrl) {
-      alert('Ссылка на оплату не пришла от сервера')
+      alert(t('pages.finance.noPaymentLink'))
       return
     }
 
     window.location.href = checkoutUrl
   } catch (error) {
     console.error(error)
-    alert('Не удалось открыть страницу оплаты')
+    alert(t('pages.finance.openPaymentError'))
   } finally {
     loadingId.value = null
   }
@@ -191,7 +193,7 @@ async function handlePayAll() {
   const unpaid = currentCharges.value.filter((item) => item.status === 'unpaid')
 
   if (!unpaid.length) {
-    alert('Нет неоплаченных начислений')
+    alert(t('pages.finance.noUnpaidCharges'))
     return
   }
 
@@ -228,7 +230,7 @@ onMounted(() => {
           :disabled="currentTotal === 0"
           @click="handlePayAll"
         >
-          {{ activeTab === 'penalty' ? 'Оплатить все' : 'Оплатить' }}
+          {{ activeTab === 'penalty' ? t('pages.finance.payAll') : t('pages.finance.pay') }}
         </button>
       </div>
 
@@ -238,7 +240,7 @@ onMounted(() => {
           :class="{ active: activeTab === 'payments' }"
           @click="activeTab = 'payments'"
         >
-          Оплаты
+          {{ t('pages.finance.paymentsTab') }}
         </button>
 
         <button
@@ -246,13 +248,13 @@ onMounted(() => {
           :class="{ active: activeTab === 'penalty' }"
           @click="activeTab = 'penalty'"
         >
-          Штрафы
+          {{ t('nav.penalty') }}
         </button>
       </div>
 
       <div class="charges-list">
         <div v-if="loading" class="empty-state">
-          Загрузка начислений...
+          {{ t('pages.finance.loadingCharges') }}
         </div>
 
         <div v-else-if="error" class="empty-state">
@@ -267,12 +269,12 @@ onMounted(() => {
             :class="{ paid: charge.status === 'paid' }"
           >
             <div class="charge-main">
-              <div class="charge-title">{{ charge.title }}</div>
-              <div v-if="charge.subtitle" class="charge-description">
-                {{ charge.subtitle }}
+              <div class="charge-title">{{ getChargePresentation(charge.kind, charge.raw_type).title }}</div>
+              <div v-if="getChargePresentation(charge.kind, charge.raw_type).subtitle" class="charge-description">
+                {{ getChargePresentation(charge.kind, charge.raw_type).subtitle }}
               </div>
               <div v-if="charge.status === 'paid' && charge.paid_at" class="charge-paid">
-                оплачено: {{ charge.paid_at }}
+                {{ t('pages.finance.paidAt', { date: charge.paid_at }) }}
               </div>
             </div>
 
@@ -293,16 +295,16 @@ onMounted(() => {
                 :disabled="loadingId === charge.id"
                 @click="handlePay(charge.id)"
               >
-                {{ loadingId === charge.id ? 'Загрузка...' : 'Оплатить' }}
+                {{ loadingId === charge.id ? t('common.loading') : t('pages.finance.pay') }}
               </button>
 
-              <div v-else class="paid-label">оплачено</div>
+              <div v-else class="paid-label">{{ t('pages.finance.paid') }}</div>
             </div>
           </div>
         </template>
 
         <div v-if="!currentCharges.length" class="empty-state">
-          Начислений пока нет
+          {{ t('pages.finance.emptyCharges') }}
         </div>
       </div>
     </div>

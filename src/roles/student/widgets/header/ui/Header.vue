@@ -14,8 +14,11 @@ import { api } from '@/api/instance'
 import { resetDormAccessState } from '@/roles/student/shared/lib/dormAccess'
 import { useAppShell } from '@/app/providers/layout/useAppShell'
 import { clearAuthSession, getAuthRole, getAuthToken } from '@/app/session/authStorage'
+import LanguageSwitcher from '@/app/i18n/LanguageSwitcher.vue'
+import { getDateLocale, useI18n } from '@/app/i18n'
 
 const router = useRouter()
+const { t } = useI18n()
 const notifications = ref<InboxNotificationItem[]>([])
 const unreadCount = ref(0)
 const loadingNotifications = ref(false)
@@ -39,7 +42,7 @@ const formatNotificationDate = (value: string | null) => {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
 
-  return date.toLocaleString('ru-RU', {
+  return date.toLocaleString(getDateLocale(), {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
@@ -178,7 +181,7 @@ onUnmounted(() => {
         v-if="isMobileViewport"
         class="menu-toggle"
         type="button"
-        aria-label="Открыть меню"
+        :aria-label="t('common.openMenu')"
         @click="toggleSidebar"
       >
         <span />
@@ -192,8 +195,14 @@ onUnmounted(() => {
     </div>
 
     <div class="actions">
+      <LanguageSwitcher />
+
       <div ref="notificationsRoot" class="notifications-wrap">
-        <button class="icon-btn" @click="toggleNotifications">
+        <button
+          class="icon-btn"
+          :aria-label="t('notifications.title')"
+          @click="toggleNotifications"
+        >
           <BellIcon />
           <span v-if="unreadCount" class="notification-counter">
             {{ unreadCount > 9 ? '9+' : unreadCount }}
@@ -203,8 +212,8 @@ onUnmounted(() => {
         <div v-if="notificationsOpen" class="notifications-panel">
           <div class="notifications-header">
             <div>
-              <strong>Уведомления</strong>
-              <span>{{ unreadCount }} непрочитанных</span>
+              <strong>{{ t('notifications.title') }}</strong>
+              <span>{{ t('notifications.unread', { count: unreadCount }) }}</span>
             </div>
 
             <button
@@ -212,16 +221,16 @@ onUnmounted(() => {
               :disabled="!unreadCount"
               @click="markAllAsRead"
             >
-              Прочитать все
+              {{ t('notifications.readAll') }}
             </button>
           </div>
 
           <div v-if="loadingNotifications" class="notifications-state">
-            Загрузка...
+            {{ t('notifications.loading') }}
           </div>
 
           <div v-else-if="!notifications.length" class="notifications-state">
-            Новых уведомлений пока нет.
+            {{ t('notifications.empty') }}
           </div>
 
           <div v-else class="notifications-list">
@@ -243,11 +252,11 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <button class="icon-btn"  @click="goProfile">
+      <button class="icon-btn" type="button" :aria-label="t('pages.profile.title')" @click="goProfile">
         <UserIcon />
       </button>
 
-      <button class="logout-btn" @click="logout">
+      <button class="logout-btn" type="button" :aria-label="t('nav.logout')" @click="logout">
         <img src="@/assets/logout.svg"/>
       </button>
     </div>

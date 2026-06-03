@@ -11,6 +11,7 @@ import {
   type GymMembership,
   type GymPlan,
 } from './gymApi'
+import { getDateLocale, useI18n } from '@/app/i18n'
 
 type CalendarCell = {
   key: string
@@ -22,6 +23,7 @@ type CalendarCell = {
 }
 
 const loading = ref(true)
+const { t } = useI18n()
 const purchaseLoading = ref(false)
 const checkInLoading = ref(false)
 const checkOutLoading = ref(false)
@@ -51,17 +53,17 @@ const currentMembershipPlan = computed(() => currentMembership.value?.plan ?? nu
 const selectedPlanPriceText = computed(() => formatCurrency(selectedPlan.value?.price))
 
 const selectedPlanSessionsText = computed(() => {
-  if (!selectedPlan.value?.total_sessions) return 'Тариф не выбран'
-  return `${selectedPlan.value.total_sessions} занятий`
+  if (!selectedPlan.value?.total_sessions) return t('pages.gym.notSelected')
+  return t('pages.gym.sessions', { count: selectedPlan.value.total_sessions })
 })
 
 const selectedPlanDurationText = computed(() => {
-  if (!selectedPlan.value?.duration_days) return 'Срок не указан'
-  return `${selectedPlan.value.duration_days} дней`
+  if (!selectedPlan.value?.duration_days) return t('pages.gym.termMissing')
+  return t('pages.gym.days', { count: selectedPlan.value.duration_days })
 })
 
 const membershipPriceText = computed(() => {
-  if (!currentMembershipPlan.value?.price) return 'Не оформлен'
+  if (!currentMembershipPlan.value?.price) return t('pages.gym.notPurchased')
   return formatCurrency(currentMembershipPlan.value.price)
 })
 
@@ -69,12 +71,12 @@ const membershipSessionsText = computed(() => {
   const totalSessions = currentMembership.value?.total_sessions ?? currentMembershipPlan.value?.total_sessions
 
   if (!totalSessions) return '—'
-  return `${totalSessions} занятий`
+  return t('pages.gym.sessions', { count: totalSessions })
 })
 
 const membershipDurationText = computed(() => {
   if (!currentMembershipPlan.value?.duration_days) return '—'
-  return `${currentMembershipPlan.value.duration_days} дней`
+  return t('pages.gym.days', { count: currentMembershipPlan.value.duration_days })
 })
 
 const membershipTone = computed(() => {
@@ -93,36 +95,36 @@ const membershipTone = computed(() => {
 const membershipLabel = computed(() => {
   switch (membershipStatus.value) {
     case 'active':
-      return 'Активен'
+      return t('statuses.active')
     case 'exhausted':
-      return 'Лимит исчерпан'
+      return t('statuses.exhausted')
     case 'cancelled':
-      return 'Отменен'
+      return t('statuses.cancelled')
     case 'expired':
-      return 'Истек'
+      return t('statuses.expired')
     default:
-      return 'Нет абонемента'
+      return t('statuses.noMembership')
   }
 })
 
 const checkoutButtonText = computed(() => {
-  if (purchaseLoading.value) return 'Переход к оплате...'
+  if (purchaseLoading.value) return t('pages.gym.goToPayment')
   if (
     selectedPlan.value &&
     (!hasMembership.value ||
       membershipStatus.value === 'expired' ||
       membershipStatus.value === 'cancelled')
   ) {
-    return `Купить ${selectedPlan.value.name}`
+    return t('pages.gym.buy', { name: selectedPlan.value.name })
   }
   if (membershipStatus.value === 'expired' || membershipStatus.value === 'cancelled') {
-    return 'Оформить новый абонемент'
+    return t('pages.gym.buyNew')
   }
   if (membershipStatus.value === 'exhausted') {
-    return 'Продление пока недоступно'
+    return t('pages.gym.renewalUnavailable')
   }
 
-  return 'Абонемент уже активен'
+  return t('pages.gym.alreadyActive')
 })
 
 const canPurchase = computed(() => {
@@ -150,23 +152,25 @@ const isGymLocked = computed(() => !hasMembership.value)
 
 const activeVisitLabel = computed(() => {
   const dateString = activeVisit.value?.check_in_at
-  if (!dateString) return 'Тренировка сейчас активна'
+  if (!dateString) return t('pages.gym.activeVisitNow')
 
   const date = new Date(dateString)
-  if (Number.isNaN(date.getTime())) return 'Тренировка сейчас активна'
+  if (Number.isNaN(date.getTime())) return t('pages.gym.activeVisitNow')
 
-  return `В зале с ${new Intl.DateTimeFormat('ru-RU', {
+  const time = new Intl.DateTimeFormat(getDateLocale(), {
     hour: '2-digit',
     minute: '2-digit',
-  }).format(date)}`
+  }).format(date)
+
+  return t('pages.gym.inGymSince', { time })
 })
 
 const formattedExpiresAt = computed(() => {
-  if (!expiresAt.value) return 'Абонемент еще не оформлен'
+  if (!expiresAt.value) return t('pages.gym.membershipNotPurchased')
   const date = new Date(expiresAt.value)
   if (Number.isNaN(date.getTime())) return expiresAt.value
 
-  return new Intl.DateTimeFormat('ru-RU', {
+  return new Intl.DateTimeFormat(getDateLocale(), {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -175,8 +179,10 @@ const formattedExpiresAt = computed(() => {
 
 const totalHoursText = computed(() => formatHoursMinutes(totalMinutes.value))
 const averageMinutesText = computed(() => {
-  if (!totalVisits.value) return '0 мин / тренировка'
-  return `${Math.round(totalMinutes.value / totalVisits.value)} мин / тренировка`
+  if (!totalVisits.value) return t('pages.gym.avgWorkout', { minutes: 0 })
+  return t('pages.gym.avgWorkout', {
+    minutes: Math.round(totalMinutes.value / totalVisits.value),
+  })
 })
 
 const calendarMap = computed(() => {
@@ -184,7 +190,7 @@ const calendarMap = computed(() => {
 })
 
 const monthLabel = computed(() =>
-  new Intl.DateTimeFormat('ru-RU', {
+  new Intl.DateTimeFormat(getDateLocale(), {
     month: 'long',
     year: 'numeric',
   }).format(displayedMonth.value)
@@ -267,7 +273,7 @@ async function loadGymPage() {
       : startOfMonth(new Date())
   } catch (e: any) {
     console.error(e)
-    error.value = 'Не удалось загрузить данные тренажерного зала'
+    error.value = t('pages.gym.loadError')
   } finally {
     loading.value = false
   }
@@ -287,7 +293,7 @@ async function handleCheckout() {
     window.location.href = checkoutUrl
   } catch (e: any) {
     console.error(e)
-    notice.value = e?.response?.data?.message || 'Не удалось создать оплату'
+    notice.value = e?.response?.data?.message || t('pages.gym.paymentError')
   } finally {
     purchaseLoading.value = false
   }
@@ -297,12 +303,12 @@ async function handleCheckIn() {
   try {
     checkInLoading.value = true
     const res = await checkInGym()
-    notice.value = res?.message || 'Вы успешно отметили вход в зал'
+    notice.value = res?.message || t('pages.gym.checkInSuccess')
     await loadGymPage()
   } catch (e: any) {
     console.error(e)
     await loadGymPage()
-    notice.value = e?.response?.data?.message || 'Не удалось выполнить check-in'
+    notice.value = e?.response?.data?.message || t('pages.gym.checkInError')
   } finally {
     checkInLoading.value = false
   }
@@ -312,18 +318,18 @@ async function handleCheckOut() {
   try {
     checkOutLoading.value = true
     const res = await checkOutGym()
-    notice.value = res?.message || 'Тренировка успешно завершена'
+    notice.value = res?.message || t('pages.gym.checkOutSuccess')
     await loadGymPage()
   } catch (e: any) {
     console.error(e)
     await loadGymPage()
 
     if (!hasActiveVisit.value) {
-      notice.value = 'Активная тренировка уже завершена. Данные обновлены.'
+      notice.value = t('pages.gym.alreadyClosed')
       return
     }
 
-    notice.value = e?.response?.data?.message || 'Не удалось выполнить check-out'
+    notice.value = e?.response?.data?.message || t('pages.gym.checkOutError')
   } finally {
     checkOutLoading.value = false
   }
@@ -384,8 +390,11 @@ function formatHoursMinutes(minutes: number) {
   const hours = Math.floor(minutes / 60)
   const leftMinutes = minutes % 60
 
-  if (!hours) return `${leftMinutes} мин`
-  return `${hours}ч ${leftMinutes.toString().padStart(2, '0')}м`
+  if (!hours) return t('pages.gym.minutesShort', { count: leftMinutes })
+  return t('pages.gym.hoursMinutesShort', {
+    hours,
+    minutes: leftMinutes.toString().padStart(2, '0'),
+  })
 }
 
 function formatCurrency(value?: number | null) {
@@ -393,7 +402,7 @@ function formatCurrency(value?: number | null) {
     return '—'
   }
 
-  return `${new Intl.NumberFormat('ru-RU').format(Number(value))} ₸`
+  return `${new Intl.NumberFormat(getDateLocale()).format(Number(value))} ₸`
 }
 </script>
 
@@ -402,19 +411,18 @@ function formatCurrency(value?: number | null) {
     <div class="gym-shell">
       <section class="hero-card">
         <div class="hero-copy">
-          <div class="hero-badge">Gym access</div>
-          <h1>Тренажерный зал</h1>
+          <div class="hero-badge">{{ t('pages.gym.gymAccess') }}</div>
+          <h1>{{ t('pages.gym.title') }}</h1>
           <p>
-            Управляйте абонементом, отмечайте вход и выход из зала и следите за
-            динамикой тренировок в одном месте.
+            {{ t('pages.gym.subtitle') }}
           </p>
 
           <div v-if="plans.length" class="purchase-plan-card">
             <div class="purchase-plan-head">
               <div>
-                <div class="section-kicker">Выбор абонемента</div>
+                <div class="section-kicker">{{ t('pages.gym.choosePlan') }}</div>
                 <strong class="purchase-plan-name">
-                  {{ selectedPlan?.name || 'Выберите тариф' }}
+                  {{ selectedPlan?.name || t('pages.gym.selectPlan') }}
                 </strong>
               </div>
 
@@ -454,7 +462,7 @@ function formatCurrency(value?: number | null) {
               :disabled="!canCheckIn"
               @click="handleCheckIn"
             >
-              {{ checkInLoading ? 'Отмечаем вход...' : 'Check-in' }}
+              {{ checkInLoading ? t('pages.gym.checkInLoading') : t('pages.gym.checkIn') }}
             </button>
 
             <button
@@ -462,7 +470,7 @@ function formatCurrency(value?: number | null) {
               :disabled="!canCheckOut"
               @click="handleCheckOut"
             >
-              {{ checkOutLoading ? 'Завершаем...' : 'Check-out' }}
+              {{ checkOutLoading ? t('pages.gym.checkOutLoading') : t('pages.gym.checkOut') }}
             </button>
           </div>
 
@@ -471,11 +479,11 @@ function formatCurrency(value?: number | null) {
         </div>
 
         <div class="hero-media">
-          <img :src="gymImage" alt="Тренажерный зал" class="hero-image" />
+          <img :src="gymImage" :alt="t('pages.gym.title')" class="hero-image" />
         </div>
       </section>
 
-      <div v-if="loading" class="state-card">Загрузка данных...</div>
+      <div v-if="loading" class="state-card">{{ t('pages.gym.dataLoading') }}</div>
 
       <template v-else>
         <section
@@ -483,68 +491,68 @@ function formatCurrency(value?: number | null) {
           :class="{ 'gym-section--locked': isGymLocked }"
         >
           <article class="membership-card">
-            <div class="section-kicker">Текущий абонемент</div>
+            <div class="section-kicker">{{ t('pages.gym.membership') }}</div>
 
             <div class="membership-head">
               <div>
                 <div :class="membershipTone">{{ membershipLabel }}</div>
-                <h2>{{ currentMembershipPlan?.name || 'Абонемент не оформлен' }}</h2>
+                <h2>{{ currentMembershipPlan?.name || t('pages.gym.membershipMissing') }}</h2>
               </div>
               <div class="membership-price">{{ membershipPriceText }}</div>
             </div>
 
             <div class="membership-stats">
               <div class="stat-box">
-                <span>Осталось занятий</span>
+                <span>{{ t('pages.gym.sessionsLeft') }}</span>
                 <strong>{{ remainingSessions }}</strong>
               </div>
               <div class="stat-box">
-                <span>Длительность</span>
+                <span>{{ t('pages.gym.duration') }}</span>
                 <strong>{{ membershipDurationText }}</strong>
               </div>
               <div class="stat-box">
-                <span>Формат</span>
+                <span>{{ t('pages.gym.format') }}</span>
                 <strong>{{ membershipSessionsText }}</strong>
               </div>
             </div>
 
             <div class="membership-meta">
               <div class="meta-row">
-                <span>Действует до</span>
+                <span>{{ t('pages.gym.validUntil') }}</span>
                 <strong>{{ formattedExpiresAt }}</strong>
               </div>
               <div class="meta-row">
-                <span>Текущий визит</span>
-                <strong>{{ hasActiveVisit ? activeVisitLabel : 'Нет активной тренировки' }}</strong>
+                <span>{{ t('pages.gym.currentVisit') }}</span>
+                <strong>{{ hasActiveVisit ? activeVisitLabel : t('pages.gym.noActiveVisit') }}</strong>
               </div>
             </div>
           </article>
 
           <div class="side-column">
             <article class="metric-card">
-              <div class="section-kicker">Current streak</div>
+              <div class="section-kicker">{{ t('pages.gym.currentStreak') }}</div>
               <div class="metric-value">{{ currentStreakWeeks }}</div>
-              <div class="metric-caption">недель подряд</div>
+              <div class="metric-caption">{{ t('pages.gym.streakWeeks') }}</div>
               <div class="metric-footnote">
-                Личный рекорд: {{ bestStreakWeeks }} недель
+                {{ t('pages.gym.bestStreak', { weeks: bestStreakWeeks }) }}
               </div>
             </article>
 
             <article class="metric-card">
-              <div class="section-kicker">Time in gym</div>
+              <div class="section-kicker">{{ t('pages.gym.timeInGym') }}</div>
               <div class="metric-value metric-value--wide">{{ totalHoursText }}</div>
               <div class="metric-caption">{{ averageMinutesText }}</div>
             </article>
 
             <article class="metric-card">
-              <div class="section-kicker">Total visits</div>
+              <div class="section-kicker">{{ t('pages.gym.totalVisits') }}</div>
               <div class="metric-value">{{ totalVisits }}</div>
-              <div class="metric-caption">завершенных тренировок</div>
+              <div class="metric-caption">{{ t('pages.gym.finishedWorkouts') }}</div>
             </article>
           </div>
 
           <div v-if="isGymLocked" class="section-lock-banner">
-            Доступ откроется после оформления абонемента
+            {{ t('pages.gym.accessAfterPurchase') }}
           </div>
         </section>
 
@@ -554,7 +562,7 @@ function formatCurrency(value?: number | null) {
         >
           <div class="calendar-head">
             <div>
-              <div class="section-kicker">Календарь активности</div>
+              <div class="section-kicker">{{ t('pages.gym.activityCalendar') }}</div>
               <h3>{{ monthLabel }}</h3>
             </div>
 
@@ -577,13 +585,13 @@ function formatCurrency(value?: number | null) {
           </div>
 
           <div class="calendar-weekdays">
-            <span>Пн</span>
-            <span>Вт</span>
-            <span>Ср</span>
-            <span>Чт</span>
-            <span>Пт</span>
-            <span>Сб</span>
-            <span>Вс</span>
+            <span>{{ t('weekdays.mon') }}</span>
+            <span>{{ t('weekdays.tue') }}</span>
+            <span>{{ t('weekdays.wed') }}</span>
+            <span>{{ t('weekdays.thu') }}</span>
+            <span>{{ t('weekdays.fri') }}</span>
+            <span>{{ t('weekdays.sat') }}</span>
+            <span>{{ t('weekdays.sun') }}</span>
           </div>
 
           <div class="calendar-grid">
@@ -598,12 +606,14 @@ function formatCurrency(value?: number | null) {
               }"
             >
               <span class="calendar-day">{{ cell.dayNumber }}</span>
-              <span v-if="cell.minutes" class="calendar-minutes">{{ cell.minutes }}м</span>
+              <span v-if="cell.minutes" class="calendar-minutes">
+                {{ t('pages.gym.minutesShort', { count: cell.minutes }) }}
+              </span>
             </div>
           </div>
 
           <div v-if="isGymLocked" class="section-lock-banner">
-            История посещений станет доступна после покупки абонемента
+            {{ t('pages.gym.historyAfterPurchase') }}
           </div>
         </section>
       </template>

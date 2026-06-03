@@ -14,18 +14,18 @@
         </svg>
       </div>
 
-      <h1>Оплата прошла успешно</h1>
+      <h1>{{ t('pages.finance.paymentSuccess') }}</h1>
 
       <p class="description">
-        Абонемент в тренажерный зал успешно оплачен.
+        {{ t('pages.finance.gymSuccessDescription') }}
       </p>
 
       <p v-if="confirming" class="status-note">
-        Проверяем статус платежа...
+        {{ t('pages.finance.checkingPayment') }}
       </p>
 
       <p v-else-if="isConfirmed" class="status-note status-note--success">
-        Оплата подтверждена и данные абонемента обновлены.
+        {{ t('pages.finance.gymPaymentConfirmed') }}
       </p>
 
       <p v-else-if="confirmationError" class="status-note status-note--error">
@@ -34,11 +34,11 @@
 
       <div class="buttons">
         <button class="primary" @click="goGym">
-          Назад в gym
+          {{ t('pages.finance.backToGym') }}
         </button>
 
         <button class="secondary" @click="goFinance">
-          Назад в finance
+          {{ t('pages.finance.backToFinance') }}
         </button>
       </div>
     </div>
@@ -49,9 +49,11 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { confirmCheckoutSession } from '@/roles/student/pages/finance/financeApi'
+import { useI18n } from '@/app/i18n'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const confirming = ref(false)
 const confirmationError = ref<string | null>(null)
 const isConfirmed = ref(false)
@@ -74,7 +76,7 @@ async function confirmPayment() {
     isConfirmed.value = Boolean(payload?.confirmed)
   } catch (error) {
     console.error(error)
-    confirmationError.value = 'Не удалось подтвердить оплату автоматически. Попробуйте открыть gym ещё раз через несколько секунд.'
+    confirmationError.value = t('pages.finance.gymConfirmError')
   } finally {
     confirming.value = false
   }

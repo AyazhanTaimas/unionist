@@ -9,9 +9,11 @@ import {
   getDormAccessState,
   UNAPPROVED_STUDENT_ALLOWED_ROUTES,
 } from '@/roles/student/shared/lib/dormAccess'
+import { useI18n } from '@/app/i18n'
 
 const dormAccessState = ref(getCachedDormAccessState())
 const { isMobileViewport, isSidebarOpen, closeSidebar } = useAppShell()
+const { t } = useI18n()
 
 const visibleMenuItems = computed(() => {
   if (dormAccessState.value?.isStudent && !dormAccessState.value.isApproved) {
@@ -37,7 +39,7 @@ onMounted(async () => {
       class="sidebar-overlay"
       :class="{ 'sidebar-overlay--visible': isSidebarOpen }"
       type="button"
-      aria-label="Закрыть меню"
+      :aria-label="t('common.closeMenu')"
       @click="closeSidebar"
     />
 
@@ -51,7 +53,7 @@ onMounted(async () => {
           v-if="isMobileViewport"
           class="sidebar-close"
           type="button"
-          aria-label="Закрыть меню"
+          :aria-label="t('common.closeMenu')"
           @click="closeSidebar"
         >
           x

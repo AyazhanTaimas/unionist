@@ -8,6 +8,7 @@ import {
   type PenaltyDetail,
 } from './penaltyApi'
 import { getProfile } from '@/roles/student/pages/profile/ui/profileApi'
+import { useI18n } from '@/app/i18n'
 
 const penaltyRulesPdfUrl = '/penalty_rules.pdf'
 const DEFAULT_DISCIPLINE_LIMIT = 10
@@ -15,6 +16,7 @@ const DEFAULT_DISCIPLINE_LIMIT = 10
 type PageMode = 'list' | 'detail'
 
 const loading = ref(false)
+const { t } = useI18n()
 const detailLoading = ref(false)
 const redeemLoading = ref(false)
 const error = ref<string | null>(null)
@@ -49,7 +51,9 @@ const scoreText = computed(() => {
 })
 
 function formatPoints(value: number) {
-  return value > 0 ? `+${value} балл` : `${value} балл`
+  return value > 0
+    ? `+${value} ${t('pages.penalty.point')}`
+    : `${value} ${t('pages.penalty.point')}`
 }
 
 function pointsClass(value: number) {
@@ -64,7 +68,7 @@ async function loadPenalties() {
     penalties.value = await getPenalties()
   } catch (e) {
     console.error(e)
-    error.value = 'Не удалось загрузить штрафы'
+    error.value = t('pages.penalty.loadError')
     penalties.value = []
   } finally {
     loading.value = false
@@ -94,7 +98,7 @@ async function openPenaltyDetail(id: number) {
     pageMode.value = 'detail'
   } catch (e) {
     console.error(e)
-    error.value = 'Не удалось загрузить детали штрафа'
+    error.value = t('pages.penalty.loadDetailError')
   } finally {
     detailLoading.value = false
   }
@@ -131,17 +135,17 @@ async function submitRedeem() {
   if (!selectedPenalty.value) return
 
   if (!redeemForm.value.event_type) {
-    redeemFormError.value = 'Выберите мероприятие'
+    redeemFormError.value = t('pages.penalty.chooseEvent')
     return
   }
 
   if (!redeemForm.value.description.trim()) {
-    redeemFormError.value = 'Введите описание'
+    redeemFormError.value = t('pages.penalty.enterDescription')
     return
   }
 
   if (!redeemForm.value.file_path.trim()) {
-    redeemFormError.value = 'Прикрепите файл'
+    redeemFormError.value = t('pages.penalty.attachFile')
     return
   }
 
@@ -161,7 +165,7 @@ async function submitRedeem() {
   } catch (e: any) {
     console.error(e)
     redeemFormError.value =
-      e?.response?.data?.message || 'Не удалось отправить отработку штрафа'
+      e?.response?.data?.message || t('pages.penalty.redeemSubmitError')
   } finally {
     redeemLoading.value = false
   }
@@ -180,15 +184,15 @@ onMounted(() => {
       <div class="penalty-card">
         <template v-if="pageMode === 'list'">
           <div class="summary-box">
-            <div class="summary-title">Штрафы: {{ scoreText }}</div>
+            <div class="summary-title">{{ t('pages.penalty.title') }}: {{ scoreText }}</div>
 
             <button class="summary-btn" :disabled="!penalties.length">
-              Отработать штраф
+              {{ t('pages.penalty.redeemPenalty') }}
             </button>
           </div>
 
           <div v-if="loading" class="state-box">
-            Загрузка...
+            {{ t('common.loading') }}
           </div>
 
           <div v-else-if="error" class="state-box state-box--error">
@@ -196,7 +200,7 @@ onMounted(() => {
           </div>
 
           <div v-else-if="!penalties.length" class="state-box">
-            Штрафов пока нет
+            {{ t('pages.penalty.noItems') }}
           </div>
 
           <div v-else class="penalty-list">
@@ -221,35 +225,37 @@ onMounted(() => {
           </div>
 
           <div class="rules-note">
-            С уставами и правилами штрафов вы можете ознакомиться пройдя по ссылке.
+            {{ t('pages.penalty.rulesNote') }}
             <a
               :href="penaltyRulesPdfUrl"
               class="rules-link"
               target="_blank"
               rel="noreferrer"
             >
-              Уставы и правила штрафов
+              {{ t('pages.penalty.rulesLink') }}
             </a>
           </div>
         </template>
 
         <template v-else>
           <div v-if="detailLoading" class="state-box">
-            Загрузка...
+            {{ t('common.loading') }}
           </div>
 
           <template v-else-if="selectedPenalty">
             <div class="detail-header">
-              <button class="back-btn" @click="backToList">← Назад</button>
+              <button class="back-btn" @click="backToList">← {{ t('common.back') }}</button>
 
               <button class="summary-btn" @click="openRedeemModal">
-                Отработать штраф
+                {{ t('pages.penalty.redeemPenalty') }}
               </button>
             </div>
 
             <h2 class="detail-title">{{ selectedPenalty.title }}</h2>
 
-            <div class="detail-date">Дата: {{ selectedPenalty.date }}</div>
+            <div class="detail-date">
+              {{ t('pages.penalty.dateWithValue', { date: selectedPenalty.date }) }}
+            </div>
 
             <p class="detail-description">
               {{ selectedPenalty.description }}
@@ -261,7 +267,7 @@ onMounted(() => {
               target="_blank"
               rel="noreferrer"
             >
-              Уставы и правила штрафов
+              {{ t('pages.penalty.rulesLink') }}
             </a>
 
             <div v-if="selectedPenalty.images?.length" class="images-grid">
@@ -275,7 +281,7 @@ onMounted(() => {
             </div>
 
             <div v-else class="evidence-empty">
-              Доказательства не прикреплены
+              {{ t('pages.penalty.evidenceMissing') }}
             </div>
           </template>
         </template>
@@ -289,12 +295,12 @@ onMounted(() => {
         @click.self="closeRedeemModal"
       >
         <div class="modal">
-          <h3 class="modal-title">Добавить отработку штрафа</h3>
+          <h3 class="modal-title">{{ t('pages.penalty.addRedemption') }}</h3>
 
           <div class="field">
-            <label class="field-label">Тип запроса</label>
+            <label class="field-label">{{ t('pages.penalty.requestType') }}</label>
             <select v-model="redeemForm.event_type" class="field-input">
-              <option value="">-- выберите мероприятие --</option>
+              <option value="">{{ t('pages.penalty.chooseEventPlaceholder') }}</option>
               <option value="community_work">community_work</option>
               <option value="cleaning">cleaning</option>
               <option value="volunteer_work">volunteer_work</option>
@@ -302,7 +308,7 @@ onMounted(() => {
           </div>
 
           <div class="field">
-            <label class="field-label">Описание</label>
+            <label class="field-label">{{ t('common.description') }}</label>
             <textarea
               v-model="redeemForm.description"
               class="field-textarea"
@@ -311,14 +317,14 @@ onMounted(() => {
           </div>
 
           <div class="field">
-            <label class="field-label">Прикрепить файл</label>
+            <label class="field-label">{{ t('pages.penalty.attachFile') }}</label>
             <input
               type="file"
               class="field-file"
               @change="onFileChange"
             />
             <div class="file-note">
-              {{ redeemForm.file_path || 'Файл не выбран' }}
+              {{ redeemForm.file_path || t('pages.penalty.fileNotSelected') }}
             </div>
           </div>
 
@@ -332,11 +338,11 @@ onMounted(() => {
               :disabled="redeemLoading"
               @click="submitRedeem"
             >
-              {{ redeemLoading ? 'Сохранение...' : 'Сохранить' }}
+              {{ redeemLoading ? t('common.saving') : t('common.save') }}
             </button>
 
             <button class="cancel-btn" @click="closeRedeemModal">
-              Отмена
+              {{ t('common.cancel') }}
             </button>
           </div>
         </div>

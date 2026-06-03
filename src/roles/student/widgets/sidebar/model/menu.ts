@@ -8,12 +8,12 @@ import GymIcon from "@/roles/student/shared/layout/ui/icons/GymIcon.vue";
 import BuySellIcon from "@/roles/student/shared/layout/ui/icons/BuySellIcon.vue";
 
 export const studentMenu: SidebarItem[] = [
-    {label: 'Главная', route: '/news', icon: HomeIcon},
-    {label: 'Проживание', route: '/housing', icon: HousingIcon},
-    {label: 'Мои запросы', route: '/myrequest', icon: RequestIcon},
-    {label: 'Ремонт', route: '/repairs', icon: PenaltyIcon},
-    {label: 'Финансовый кабинет', route: '/finance', icon: FinanceIcon},
-    {label: 'Штрафы', route: '/penalty', icon: PenaltyIcon},
-    {label: 'Запись в тренажерный зал', route: '/gym', icon:GymIcon},
-    {label: 'Купи-продай', route: '/buysell', icon: BuySellIcon}
+    {labelKey: 'nav.home', route: '/news', icon: HomeIcon},
+    {labelKey: 'nav.housing', route: '/housing', icon: HousingIcon},
+    {labelKey: 'nav.myRequests', route: '/myrequest', icon: RequestIcon},
+    {labelKey: 'nav.repairs', route: '/repairs', icon: PenaltyIcon},
+    {labelKey: 'nav.finance', route: '/finance', icon: FinanceIcon},
+    {labelKey: 'nav.penalty', route: '/penalty', icon: PenaltyIcon},
+    {labelKey: 'nav.gym', route: '/gym', icon:GymIcon},
+    {labelKey: 'nav.buySell', route: '/buysell', icon: BuySellIcon}
 ]
