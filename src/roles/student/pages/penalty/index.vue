@@ -10,13 +10,12 @@ import {
 import { getProfile } from '@/roles/student/pages/profile/ui/profileApi'
 import { useI18n } from '@/app/i18n'
 
-const penaltyRulesPdfUrl = '/penalty_rules.pdf'
 const DEFAULT_DISCIPLINE_LIMIT = 10
 
 type PageMode = 'list' | 'detail'
 
 const loading = ref(false)
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const detailLoading = ref(false)
 const redeemLoading = ref(false)
 const error = ref<string | null>(null)
@@ -27,6 +26,7 @@ const pageMode = ref<PageMode>('list')
 const disciplineLimit = ref(DEFAULT_DISCIPLINE_LIMIT)
 
 const showRedeemModal = ref(false)
+const penaltyRulesPdfUrl = computed(() => `/penalty_rules_${locale.value}.pdf`)
 
 const redeemForm = ref({
   event_type: '',
