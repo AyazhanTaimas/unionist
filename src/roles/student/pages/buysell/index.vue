@@ -1,10 +1,20 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from '@/app/i18n'
 import { getBuySellListings, getBuySellMeta, type BuySellListing, type BuySellOption } from './api'
-import { formatListingDate, formatListingPrice, getListingCoverStyle, getListingSellerName } from './model'
+import {
+  formatListingDate,
+  formatListingPrice,
+  getBuySellCategoryLabel,
+  getListingCategoryLabel,
+  getListingConditionLabel,
+  getListingCoverStyle,
+  getListingSellerName,
+} from './model'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -14,8 +24,11 @@ const listings = ref<BuySellListing[]>([])
 const categories = ref<BuySellOption[]>([])
 
 const filterCategories = computed(() => [
-  { value: 'all', label: 'Все' },
-  ...categories.value,
+  { value: 'all', label: t('common.all') },
+  ...categories.value.map((category) => ({
+    ...category,
+    label: getBuySellCategoryLabel(category.value, category.label),
+  })),
 ])
 
 const filteredListings = computed(() => {
@@ -49,7 +62,7 @@ async function loadCatalog() {
     listings.value = catalog
   } catch (e) {
     console.error(e)
-    error.value = 'Не удалось загрузить объявления'
+    error.value = t('pages.buySell.loadError')
     listings.value = []
   } finally {
     loading.value = false
@@ -74,17 +87,16 @@ onMounted(() => {
     <section class="market-shell">
       <div class="market-topbar">
         <div class="topbar-copy">
-          <div class="eyebrow">Campus market</div>
-          <h1>Купи-продай</h1>
+          <div class="eyebrow">{{ t('pages.buySell.eyebrow') }}</div>
+          <h1>{{ t('pages.buySell.title') }}</h1>
           <p>
-            Полный список объявлений для студентов: учебники, техника и полезные вещи
-            для жизни в общежитии.
+            {{ t('pages.buySell.subtitle') }}
           </p>
         </div>
 
         <div class="topbar-actions">
-          <button class="outline-btn" @click="openMyListings">Мои товары</button>
-          <button class="primary-btn" @click="openCreateListing">Разместить</button>
+          <button class="outline-btn" @click="openMyListings">{{ t('pages.buySell.myListings') }}</button>
+          <button class="primary-btn" @click="openCreateListing">{{ t('pages.buySell.publish') }}</button>
         </div>
       </div>
 
@@ -98,7 +110,7 @@ onMounted(() => {
               />
             </svg>
           </span>
-          <input v-model="searchTerm" type="text" placeholder="Поиск товара" />
+          <input v-model="searchTerm" type="text" :placeholder="t('pages.buySell.searchPlaceholder')" />
         </label>
 
         <div class="category-row">
@@ -117,19 +129,19 @@ onMounted(() => {
       <section class="catalog-panel">
         <div class="catalog-head">
           <div>
-            <div class="panel-kicker">Каталог</div>
-            <strong>{{ filteredListings.length }} объявлений</strong>
+            <div class="panel-kicker">{{ t('pages.buySell.catalog') }}</div>
+            <strong>{{ t('pages.buySell.catalogCount', { count: filteredListings.length }) }}</strong>
           </div>
-          <span class="catalog-note">Нажмите на карточку, чтобы открыть страницу товара</span>
+          <span class="catalog-note">{{ t('pages.buySell.catalogHint') }}</span>
         </div>
 
         <div v-if="loading" class="empty-state">
-          <strong>Загрузка объявлений...</strong>
+          <strong>{{ t('pages.buySell.loadingListings') }}</strong>
         </div>
 
         <div v-else-if="error" class="empty-state">
           <strong>{{ error }}</strong>
-          <button class="outline-btn" @click="loadCatalog">Повторить</button>
+          <button class="outline-btn" @click="loadCatalog">{{ t('pages.buySell.retry') }}</button>
         </div>
 
         <div v-else-if="filteredListings.length" class="listing-grid">
@@ -143,8 +155,8 @@ onMounted(() => {
 
             <div class="listing-copy">
               <div class="listing-meta">
-                <span>{{ listing.category_label }}</span>
-                <span>{{ listing.condition_label }}</span>
+                <span>{{ getListingCategoryLabel(listing) }}</span>
+                <span>{{ getListingConditionLabel(listing) }}</span>
               </div>
 
               <h2>{{ listing.title }}</h2>
@@ -154,7 +166,7 @@ onMounted(() => {
               <div class="listing-footer">
                 <div>
                   <strong>{{ getListingSellerName(listing) }}</strong>
-                  <span>{{ listing.pickup_location || 'Самовывоз из общежития' }}</span>
+                  <span>{{ listing.pickup_location || t('pages.buySell.pickupFallback') }}</span>
                 </div>
                 <time v-if="listing.created_at">{{ formatListingDate(listing.created_at) }}</time>
               </div>
@@ -163,8 +175,8 @@ onMounted(() => {
         </div>
 
         <div v-else class="empty-state">
-          <strong>Ничего не найдено</strong>
-          <p>Попробуйте изменить запрос или выбрать другую категорию.</p>
+          <strong>{{ t('pages.buySell.nothingFound') }}</strong>
+          <p>{{ t('pages.buySell.emptyHint') }}</p>
         </div>
       </section>
     </section>

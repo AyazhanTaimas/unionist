@@ -1,11 +1,21 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from '@/app/i18n'
 import { getBuySellListing, getBuySellListings, type BuySellListing } from './api'
-import { formatListingDate, formatListingPrice, getListingAccent, getListingCoverStyle, getListingSellerName } from './model'
+import {
+  formatListingDate,
+  formatListingPrice,
+  getListingAccent,
+  getListingCategoryLabel,
+  getListingConditionLabel,
+  getListingCoverStyle,
+  getListingSellerName,
+} from './model'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -25,7 +35,7 @@ const activeImage = computed(() => {
 })
 
 const sellerName = computed(() => {
-  if (!listing.value) return 'Студент'
+  if (!listing.value) return t('pages.buySell.defaultSeller')
   return getListingSellerName(listing.value)
 })
 
@@ -51,7 +61,7 @@ async function loadListing(id: number) {
     console.error(e)
     listing.value = null
     relatedListings.value = []
-    error.value = 'Не удалось загрузить объявление'
+    error.value = t('pages.buySell.loadError')
   } finally {
     loading.value = false
   }
@@ -65,7 +75,7 @@ watch(
   () => listingId.value,
   (id) => {
     if (id === null) {
-      error.value = 'Неверный идентификатор товара'
+      error.value = t('pages.buySell.detailNotFound')
       listing.value = null
       relatedListings.value = []
       loading.value = false
@@ -81,16 +91,16 @@ watch(
 <template>
   <div class="detail-page">
     <section v-if="loading" class="state-shell">
-      <strong>Загрузка товара...</strong>
+      <strong>{{ t('pages.buySell.detailLoading') }}</strong>
     </section>
 
     <section v-else-if="!listing" class="state-shell">
-      <div class="detail-kicker">Buy-sell</div>
-      <h1>{{ error || 'Товар не найден' }}</h1>
-      <p>Объявление удалено или ссылка больше неактуальна.</p>
+      <div class="detail-kicker">{{ t('pages.buySell.detailKicker') }}</div>
+      <h1>{{ error || t('pages.buySell.detailNotFound') }}</h1>
+      <p>{{ t('pages.buySell.detailDeleted') }}</p>
       <button class="back-btn" @click="goBack">
         <span aria-hidden="true">‹</span>
-        <span>Вернуться в каталог</span>
+        <span>{{ t('pages.buySell.backToCatalog') }}</span>
       </button>
     </section>
 
@@ -98,10 +108,10 @@ watch(
       <div class="detail-head">
         <button class="back-btn" @click="goBack">
           <span aria-hidden="true">‹</span>
-          <span>Назад к списку</span>
+          <span>{{ t('pages.buySell.backToList') }}</span>
         </button>
 
-        <RouterLink class="ghost-link" :to="{ name: 'buysell-my' }">Мои товары</RouterLink>
+        <RouterLink class="ghost-link" :to="{ name: 'buysell-my' }">{{ t('pages.buySell.myListings') }}</RouterLink>
       </div>
 
       <div class="detail-layout">
@@ -129,40 +139,40 @@ watch(
         </div>
 
         <article class="info-panel">
-          <div class="detail-kicker">Карточка товара</div>
+          <div class="detail-kicker">{{ t('pages.buySell.productCard') }}</div>
           <h1>{{ listing.title }}</h1>
 
           <div class="price-row">
             <strong>{{ formatListingPrice(listing.price) }}</strong>
-            <span>{{ listing.category_label }}</span>
+            <span>{{ getListingCategoryLabel(listing) }}</span>
           </div>
 
           <p class="description">{{ listing.description }}</p>
 
           <div class="detail-grid">
             <div class="detail-card">
-              <span>Продавец</span>
+              <span>{{ t('pages.buySell.seller') }}</span>
               <strong>{{ sellerName }}</strong>
             </div>
             <div class="detail-card">
-              <span>Состояние</span>
-              <strong>{{ listing.condition_label }}</strong>
+              <span>{{ t('pages.buySell.condition') }}</span>
+              <strong>{{ getListingConditionLabel(listing) }}</strong>
             </div>
             <div class="detail-card">
-              <span>Локация</span>
-              <strong>{{ listing.pickup_location || 'Самовывоз из общежития' }}</strong>
+              <span>{{ t('pages.buySell.location') }}</span>
+              <strong>{{ listing.pickup_location || t('pages.buySell.pickupFallback') }}</strong>
             </div>
             <div class="detail-card">
-              <span>Размещено</span>
-              <strong>{{ formatListingDate(listing.created_at) || 'Недавно' }}</strong>
+              <span>{{ t('pages.buySell.published') }}</span>
+              <strong>{{ formatListingDate(listing.created_at) || t('pages.buySell.recently') }}</strong>
             </div>
           </div>
 
           <a v-if="contactHref" class="contact-btn" :href="contactHref">
-            Позвонить продавцу
+            {{ t('pages.buySell.callSeller') }}
           </a>
           <button v-else class="contact-btn contact-btn--disabled" disabled>
-            Контакт пока не указан
+            {{ t('pages.buySell.contactMissing') }}
           </button>
         </article>
       </div>
@@ -170,10 +180,10 @@ watch(
       <section v-if="relatedListings.length" class="related-panel">
         <div class="section-top">
           <div>
-            <div class="detail-kicker">Другие предложения</div>
-            <h2>Похожие товары</h2>
+            <div class="detail-kicker">{{ t('pages.buySell.relatedKicker') }}</div>
+            <h2>{{ t('pages.buySell.relatedTitle') }}</h2>
           </div>
-          <RouterLink class="ghost-link" :to="{ name: 'buysell' }">Открыть каталог</RouterLink>
+          <RouterLink class="ghost-link" :to="{ name: 'buysell' }">{{ t('pages.buySell.openCatalog') }}</RouterLink>
         </div>
 
         <div class="related-grid">

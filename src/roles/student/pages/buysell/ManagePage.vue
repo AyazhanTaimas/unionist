@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from '@/app/i18n'
 import ListingFormModal from './ListingFormModal.vue'
 import {
   deleteBuySellListing,
@@ -9,10 +10,17 @@ import {
   type BuySellListing,
   type BuySellMeta,
 } from './api'
-import { formatListingDate, formatListingPrice, getListingCoverStyle } from './model'
+import {
+  formatListingDate,
+  formatListingPrice,
+  getListingCategoryLabel,
+  getListingCoverStyle,
+  getListingStatusLabel,
+} from './model'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -47,7 +55,7 @@ async function loadManagePage() {
     listings.value = myListings
   } catch (e) {
     console.error(e)
-    error.value = 'Не удалось загрузить ваши объявления'
+    error.value = t('pages.buySell.manageLoadError')
     listings.value = []
   } finally {
     loading.value = false
@@ -80,16 +88,16 @@ async function handleSaved() {
 }
 
 async function handleDelete(listing: BuySellListing) {
-  if (!confirm(`Удалить объявление "${listing.title}"?`)) {
+  if (!confirm(t('pages.buySell.deleteConfirm', { title: listing.title }))) {
     return
   }
 
   try {
     await deleteBuySellListing(listing.id)
     await loadManagePage()
-  } catch (e: any) {
+  } catch (e) {
     console.error(e)
-    alert(e?.response?.data?.message || 'Не удалось удалить объявление')
+    alert(t('pages.buySell.deleteError'))
   }
 }
 
@@ -119,40 +127,40 @@ onMounted(() => {
     <section class="manage-shell">
       <div class="manage-topbar">
         <div>
-          <div class="eyebrow">Seller desk</div>
-          <h1>Мои товары</h1>
-          <p>Управляйте объявлениями, обновляйте фото и отмечайте проданные вещи.</p>
+          <div class="eyebrow">{{ t('pages.buySell.manageEyebrow') }}</div>
+          <h1>{{ t('pages.buySell.manageTitle') }}</h1>
+          <p>{{ t('pages.buySell.manageSubtitle') }}</p>
         </div>
 
         <div class="topbar-actions">
-          <RouterLink class="outline-link" :to="{ name: 'buysell' }">Открыть каталог</RouterLink>
-          <button class="primary-btn" @click="openCreate">Новое объявление</button>
+          <RouterLink class="outline-link" :to="{ name: 'buysell' }">{{ t('pages.buySell.openCatalog') }}</RouterLink>
+          <button class="primary-btn" @click="openCreate">{{ t('pages.buySell.newListing') }}</button>
         </div>
       </div>
 
       <div class="stats-grid">
         <article class="stat-card">
-          <span>Всего объявлений</span>
+          <span>{{ t('pages.buySell.totalListings') }}</span>
           <strong>{{ listings.length }}</strong>
         </article>
         <article class="stat-card">
-          <span>Активных</span>
+          <span>{{ t('pages.buySell.activeListings') }}</span>
           <strong>{{ activeCount }}</strong>
         </article>
         <article class="stat-card">
-          <span>Продано</span>
+          <span>{{ t('pages.buySell.soldListings') }}</span>
           <strong>{{ soldCount }}</strong>
         </article>
       </div>
 
       <section class="panel">
         <div v-if="loading" class="empty-state">
-          <strong>Загрузка ваших объявлений...</strong>
+          <strong>{{ t('pages.buySell.loadingMyListings') }}</strong>
         </div>
 
         <div v-else-if="error" class="empty-state">
           <strong>{{ error }}</strong>
-          <button class="outline-btn" @click="loadManagePage">Повторить</button>
+          <button class="outline-btn" @click="loadManagePage">{{ t('pages.buySell.retry') }}</button>
         </div>
 
         <div v-else-if="listings.length" class="listing-grid">
@@ -161,9 +169,9 @@ onMounted(() => {
 
             <div class="listing-copy">
               <div class="listing-meta">
-                <span>{{ listing.category_label }}</span>
+                <span>{{ getListingCategoryLabel(listing) }}</span>
                 <span :class="`status-pill status-pill--${listing.status}`">
-                  {{ listing.status_label }}
+                  {{ getListingStatusLabel(listing) }}
                 </span>
               </div>
 
@@ -177,19 +185,19 @@ onMounted(() => {
 
               <div class="actions">
                 <RouterLink class="ghost-btn" :to="{ name: 'buysell-detail', params: { id: listing.id } }">
-                  Открыть
+                  {{ t('pages.buySell.open') }}
                 </RouterLink>
-                <button class="ghost-btn" @click="openEdit(listing)">Редактировать</button>
-                <button class="danger-btn" @click="handleDelete(listing)">Удалить</button>
+                <button class="ghost-btn" @click="openEdit(listing)">{{ t('common.edit') }}</button>
+                <button class="danger-btn" @click="handleDelete(listing)">{{ t('common.delete') }}</button>
               </div>
             </div>
           </article>
         </div>
 
         <div v-else class="empty-state">
-          <strong>Пока нет ни одного объявления</strong>
-          <p>Разместите первый товар, и он появится в каталоге.</p>
-          <button class="primary-btn" @click="openCreate">Разместить товар</button>
+          <strong>{{ t('pages.buySell.noOwnListings') }}</strong>
+          <p>{{ t('pages.buySell.noOwnListingsHint') }}</p>
+          <button class="primary-btn" @click="openCreate">{{ t('pages.buySell.publishProduct') }}</button>
         </div>
       </section>
     </section>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from '@/app/i18n'
 import {
   createBuySellListing,
   updateBuySellListing,
@@ -18,6 +19,8 @@ const emit = defineEmits<{
   close: []
   saved: []
 }>()
+
+const { t } = useI18n()
 
 type ExistingImage = {
   path: string
@@ -104,12 +107,12 @@ async function submit() {
   error.value = null
 
   if (!title.value.trim()) {
-    error.value = 'Введите название товара'
+    error.value = t('pages.buySell.titleRequired')
     return
   }
 
   if (existingImages.value.length + newImages.value.length < 1) {
-    error.value = 'Добавьте хотя бы одно изображение'
+    error.value = t('pages.buySell.imageRequired')
     return
   }
 
@@ -143,11 +146,7 @@ async function submit() {
     emit('saved')
   } catch (e: any) {
     console.error(e)
-
-    error.value =
-      e?.response?.data?.message ||
-      e?.response?.data?.errors?.images?.[0] ||
-      'Не удалось сохранить объявление'
+    error.value = t('pages.buySell.saveError')
   } finally {
     loading.value = false
   }
@@ -171,8 +170,8 @@ onBeforeUnmount(() => {
     <div class="modal">
       <div class="modal-head">
         <div>
-          <div class="kicker">Buy-sell</div>
-          <h2>{{ isEditing ? 'Редактировать объявление' : 'Новое объявление' }}</h2>
+          <div class="kicker">{{ t('pages.buySell.formKicker') }}</div>
+          <h2>{{ isEditing ? t('pages.buySell.editListing') : t('pages.buySell.newListingTitle') }}</h2>
         </div>
 
         <button class="close-btn" @click="emit('close')">×</button>
@@ -182,67 +181,67 @@ onBeforeUnmount(() => {
 
       <div class="form-grid">
         <label class="field field--wide">
-          <span>Название</span>
-          <input v-model="title" type="text" placeholder="Например, Калькулятор Casio" />
+          <span>{{ t('pages.buySell.titleLabel') }}</span>
+          <input v-model="title" type="text" :placeholder="t('pages.buySell.titlePlaceholder')" />
         </label>
 
         <label class="field field--wide">
-          <span>Описание</span>
+          <span>{{ t('common.description') }}</span>
           <textarea
             v-model="description"
             rows="5"
-            placeholder="Опишите товар, состояние и комплект"
+            :placeholder="t('pages.buySell.descriptionPlaceholder')"
           />
         </label>
 
         <label class="field">
-          <span>Цена, ₸</span>
+          <span>{{ t('pages.buySell.priceLabel') }}</span>
           <input v-model="price" type="number" min="0" placeholder="0" />
         </label>
 
         <label class="field">
-          <span>Категория</span>
+          <span>{{ t('pages.buySell.category') }}</span>
           <select v-model="category">
             <option v-for="item in categories" :key="item.value" :value="item.value">
-              {{ item.label }}
+              {{ t(`pages.buySell.categories.${item.value}`) }}
             </option>
           </select>
         </label>
 
         <label class="field">
-          <span>Состояние</span>
+          <span>{{ t('pages.buySell.condition') }}</span>
           <select v-model="condition">
             <option v-for="item in conditions" :key="item.value" :value="item.value">
-              {{ item.label }}
+              {{ t(`pages.buySell.conditions.${item.value}`) }}
             </option>
           </select>
         </label>
 
         <label class="field">
-          <span>Статус</span>
+          <span>{{ t('pages.buySell.status') }}</span>
           <select v-model="status">
             <option v-for="item in statuses" :key="item.value" :value="item.value">
-              {{ item.label }}
+              {{ t(`pages.buySell.listingStatuses.${item.value}`) }}
             </option>
           </select>
         </label>
 
         <label class="field">
-          <span>Локация</span>
+          <span>{{ t('pages.buySell.pickupLocation') }}</span>
           <input
             v-model="pickupLocation"
             type="text"
-            placeholder="Блок A, 3 этаж или вахта"
+            :placeholder="t('pages.buySell.pickupPlaceholder')"
           />
         </label>
 
         <label class="field">
-          <span>Телефон</span>
+          <span>{{ t('common.phone') }}</span>
           <input v-model="contactPhone" type="text" placeholder="+7 777 000 00 00" />
         </label>
 
         <label class="field field--wide">
-          <span>Фото товара</span>
+          <span>{{ t('pages.buySell.productPhoto') }}</span>
           <input
             type="file"
             accept="image/*"
@@ -250,26 +249,26 @@ onBeforeUnmount(() => {
             :disabled="existingImages.length + newImages.length >= 5"
             @change="handleFileChange"
           />
-          <small>До 5 изображений</small>
+          <small>{{ t('pages.buySell.maxImages') }}</small>
         </label>
       </div>
 
       <div v-if="existingImages.length || newImages.length" class="preview-grid">
         <div v-for="image in existingImages" :key="image.path" class="preview-card">
           <img :src="image.url" alt="" />
-          <button class="remove-btn" @click="removeExistingImage(image.path)">Удалить</button>
+          <button class="remove-btn" @click="removeExistingImage(image.path)">{{ t('pages.buySell.removeImage') }}</button>
         </div>
 
         <div v-for="image in newImages" :key="image.url" class="preview-card">
           <img :src="image.url" alt="" />
-          <button class="remove-btn" @click="removeNewImage(image.url)">Удалить</button>
+          <button class="remove-btn" @click="removeNewImage(image.url)">{{ t('pages.buySell.removeImage') }}</button>
         </div>
       </div>
 
       <div class="actions">
-        <button class="secondary-btn" @click="emit('close')">Отмена</button>
+        <button class="secondary-btn" @click="emit('close')">{{ t('common.cancel') }}</button>
         <button class="primary-btn" :disabled="loading" @click="submit">
-          {{ loading ? 'Сохранение...' : isEditing ? 'Сохранить' : 'Опубликовать' }}
+          {{ loading ? t('common.saving') : isEditing ? t('common.save') : t('pages.buySell.publishAction') }}
         </button>
       </div>
     </div>
