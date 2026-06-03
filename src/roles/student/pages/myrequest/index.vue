@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { api } from '@/api/instance'
+import { useI18n } from '@/app/i18n'
 import { getMyChangeRoomRequests, getMyLiveRequests } from './api'
 import type {
   StudentChangeRoomRequest,
@@ -29,6 +30,7 @@ const changeRoomRequests = ref<StudentChangeRoomRequest[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const activeTab = ref<StudentRequestTab>('all')
+const { t, dateLocale } = useI18n()
 
 const baseUrl = String(api.defaults.baseURL || '').replace(/\/api\/v1\/?$/, '')
 
@@ -89,14 +91,14 @@ const filteredRequests = computed(() =>
 
 const emptyStateText = computed(() => {
   if (activeTab.value === 'pending') {
-    return 'Сейчас у вас нет заявок, которые ждут рассмотрения.'
+    return t('pages.myRequests.activeEmpty')
   }
 
   if (activeTab.value === 'history') {
-    return 'История пока пустая. Обработанные заявки появятся здесь.'
+    return t('pages.myRequests.historyEmpty')
   }
 
-  return 'Вы ещё не отправляли заявки на заселение или смену комнаты.'
+  return t('pages.myRequests.allEmpty')
 })
 
 const fetchRequests = async () => {
@@ -111,26 +113,26 @@ const fetchRequests = async () => {
 
     liveRequests.value = live
     changeRoomRequests.value = changeRoom
-  } catch (requestError: any) {
-    error.value =
-      requestError?.response?.data?.message || 'Не удалось загрузить историю заявок'
+  } catch (requestError) {
+    console.error(requestError)
+    error.value = t('pages.myRequests.loadError')
   } finally {
     loading.value = false
   }
 }
 
 const getTypeLabel = (type: StudentRequestType) =>
-  type === 'live' ? 'Заселение' : 'Смена комнаты'
+  type === 'live' ? t('pages.myRequests.live') : t('pages.myRequests.changeRoom')
 
 const getTitle = (item: StudentRequestItem) =>
   item.type === 'live'
-    ? 'Заявка на заселение'
-    : 'Заявка на смену комнаты'
+    ? t('pages.myRequests.liveTitle')
+    : t('pages.myRequests.changeRoomTitle')
 
 const getStatusLabel = (status: StudentRequestItem['status']) => {
-  if (status === 'pending') return 'На рассмотрении'
-  if (status === 'accepted') return 'Принята'
-  if (status === 'rejected') return 'Отклонена'
+  if (status === 'pending') return t('common.pending')
+  if (status === 'accepted') return t('common.accepted')
+  if (status === 'rejected') return t('common.rejected')
   return status
 }
 
@@ -144,12 +146,12 @@ const getRoomLabel = (room: StudentRequestRoom | null) => {
   const floor = room?.floor
   const building = floor?.building
 
-  if (!room) return 'Комната не указана'
+  if (!room) return t('pages.myRequests.noRoom')
 
-  const parts = [`Комната ${room.room_number || room.id}`]
+  const parts = [t('pages.myRequests.roomLabel', { room: room.room_number || room.id })]
 
   if (floor?.floor_number != null) {
-    parts.push(`${floor.floor_number} этаж`)
+    parts.push(t('pages.housing.floorOption', { floor: floor.floor_number }))
   }
 
   if (building?.name) {
@@ -160,7 +162,7 @@ const getRoomLabel = (room: StudentRequestRoom | null) => {
 }
 
 const getAddress = (room: StudentRequestRoom | null) =>
-  room?.floor?.building?.address || 'Не указан'
+  room?.floor?.building?.address || t('common.notSpecified')
 
 const getDocumentUrl = (document: StudentRequestDocument) => {
   if (/^https?:\/\//i.test(document.path)) {
@@ -177,9 +179,9 @@ const getDocumentUrl = (document: StudentRequestDocument) => {
 const formatDate = (value: string) => {
   const date = new Date(value)
 
-  if (Number.isNaN(date.getTime())) return 'Дата неизвестна'
+  if (Number.isNaN(date.getTime())) return t('common.unknownDate')
 
-  return date.toLocaleString('ru-RU', {
+  return date.toLocaleString(dateLocale.value, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -195,37 +197,36 @@ onMounted(fetchRequests)
   <section class="requests-page">
     <div class="hero">
       <div>
-        <p class="eyebrow">Student / Requests</p>
-        <h1>Мои запросы</h1>
+        <p class="eyebrow">{{ t('pages.myRequests.eyebrow') }}</p>
+        <h1>{{ t('pages.myRequests.title') }}</h1>
         <p class="subtitle">
-          Здесь хранится история ваших заявок на заселение и смену комнаты.
-          Активные заявки остаются сверху, а обработанные попадают в историю.
+          {{ t('pages.myRequests.subtitle') }}
         </p>
       </div>
 
       <button class="refresh-btn" :disabled="loading" @click="fetchRequests">
-        {{ loading ? 'Обновление...' : 'Обновить' }}
+        {{ loading ? t('common.refreshing') : t('common.refresh') }}
       </button>
     </div>
 
     <div class="stats">
       <article class="stat-card">
-        <span class="stat-label">Всего</span>
+        <span class="stat-label">{{ t('common.total') }}</span>
         <strong>{{ totalCount }}</strong>
       </article>
 
       <article class="stat-card">
-        <span class="stat-label">На рассмотрении</span>
+        <span class="stat-label">{{ t('common.pending') }}</span>
         <strong>{{ pendingCount }}</strong>
       </article>
 
       <article class="stat-card">
-        <span class="stat-label">Принято</span>
+        <span class="stat-label">{{ t('common.accepted') }}</span>
         <strong>{{ acceptedCount }}</strong>
       </article>
 
       <article class="stat-card">
-        <span class="stat-label">Отклонено</span>
+        <span class="stat-label">{{ t('common.rejected') }}</span>
         <strong>{{ rejectedCount }}</strong>
       </article>
     </div>
@@ -238,7 +239,7 @@ onMounted(fetchRequests)
         :class="{ active: activeTab === 'all' }"
         @click="activeTab = 'all'"
       >
-        Все
+        {{ t('common.all') }}
         <span class="tab-count">{{ totalCount }}</span>
       </button>
 
@@ -247,7 +248,7 @@ onMounted(fetchRequests)
         :class="{ active: activeTab === 'pending' }"
         @click="activeTab = 'pending'"
       >
-        На рассмотрении
+        {{ t('common.pending') }}
         <span class="tab-count">{{ pendingCount }}</span>
       </button>
 
@@ -256,13 +257,13 @@ onMounted(fetchRequests)
         :class="{ active: activeTab === 'history' }"
         @click="activeTab = 'history'"
       >
-        История
+        {{ t('common.history') }}
         <span class="tab-count">{{ historyCount }}</span>
       </button>
     </div>
 
     <div v-if="loading && !allRequests.length" class="state-card">
-      Загрузка заявок...
+      {{ t('pages.myRequests.loading') }}
     </div>
 
     <div v-else-if="!filteredRequests.length" class="state-card">
@@ -294,22 +295,22 @@ onMounted(fetchRequests)
 
         <div class="details-grid">
           <div class="detail-card">
-            <span class="detail-label">Комната</span>
+            <span class="detail-label">{{ t('common.room') }}</span>
             <span class="detail-value">{{ getRoomLabel(item.room) }}</span>
           </div>
 
           <div class="detail-card">
-            <span class="detail-label">Адрес</span>
+            <span class="detail-label">{{ t('common.address') }}</span>
             <span class="detail-value">{{ getAddress(item.room) }}</span>
           </div>
 
           <div class="detail-card">
-            <span class="detail-label">Отправлена</span>
+            <span class="detail-label">{{ t('common.sentAt') }}</span>
             <span class="detail-value">{{ formatDate(item.createdAt) }}</span>
           </div>
 
           <div class="detail-card">
-            <span class="detail-label">Обновлена</span>
+            <span class="detail-label">{{ t('common.updatedAt') }}</span>
             <span class="detail-value">{{ formatDate(item.updatedAt) }}</span>
           </div>
         </div>
@@ -318,14 +319,14 @@ onMounted(fetchRequests)
           v-if="item.type === 'change_room'"
           class="description-card"
         >
-          <span class="detail-label">Комментарий</span>
+          <span class="detail-label">{{ t('common.comment') }}</span>
           <span class="detail-value">
-            {{ item.description || 'Комментарий не указан' }}
+            {{ item.description || t('pages.myRequests.noComment') }}
           </span>
         </div>
 
         <div v-if="item.documents.length" class="documents">
-          <span class="detail-label">Документы</span>
+          <span class="detail-label">{{ t('common.documents') }}</span>
 
           <div class="document-list">
             <a
