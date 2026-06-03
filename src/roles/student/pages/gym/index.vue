@@ -1078,16 +1078,20 @@ button:disabled {
   .membership-card,
   .metric-card,
   .calendar-card {
-    padding: 18px;
-    border-radius: 22px;
+    padding: 14px;
+    border-radius: 18px;
   }
 
   .action-row {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .purchase-plan-head {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
   }
 
   .hero-image {
@@ -1096,12 +1100,13 @@ button:disabled {
 
   .membership-head,
   .calendar-head {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: flex-start;
   }
 
   .membership-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .membership-price,
@@ -1110,7 +1115,7 @@ button:disabled {
   }
 
   .calendar-nav {
-    width: 100%;
+    width: auto;
   }
 
   .calendar-nav-btn {
@@ -1137,6 +1142,26 @@ button:disabled {
   .section-lock-banner {
     inset: auto 18px 18px 18px;
   }
+
+  .primary-btn {
+    grid-column: 1 / -1;
+  }
+
+  .stat-box {
+    padding: 12px 10px;
+    border-radius: 14px;
+  }
+
+  .stat-box span,
+  .meta-row span {
+    font-size: 0.72rem;
+  }
+
+  .stat-box strong,
+  .meta-row strong {
+    margin-top: 6px;
+    font-size: 0.92rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1144,7 +1169,18 @@ button:disabled {
   .membership-card,
   .metric-card,
   .calendar-card {
-    padding: 14px;
+    padding: 12px;
+  }
+
+  .purchase-plan-head,
+  .membership-head,
+  .calendar-head {
+    grid-template-columns: minmax(0, 1fr);
+    flex-direction: column;
+  }
+
+  .membership-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .calendar-weekdays {

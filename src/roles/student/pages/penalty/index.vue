@@ -678,7 +678,7 @@ onMounted(() => {
 
 @media (max-width: 700px) {
   .penalty-page {
-    margin-top: 56px;
+    margin-top: 40px;
   }
 
   .penalty-card-wrapper {
@@ -691,26 +691,33 @@ onMounted(() => {
 
   .penalty-card {
     margin-left: 0;
-    padding: 16px;
-    border-radius: 24px;
-  }
-
-  .summary-box {
-    padding: 16px;
+    padding: 12px;
     border-radius: 18px;
   }
 
+  .summary-box {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
   .summary-title {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .summary-btn {
-    width: 100%;
-    min-height: 42px;
+    width: auto;
+    min-width: 130px;
+    min-height: 38px;
+    padding: 0 12px;
   }
 
   .detail-header {
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
   }
 
   .detail-title {
@@ -723,8 +730,8 @@ onMounted(() => {
   }
 
   .image-card {
-    height: 140px;
-    border-radius: 18px;
+    height: 120px;
+    border-radius: 14px;
   }
 
   .modal {
@@ -742,15 +749,37 @@ onMounted(() => {
   .cancel-btn {
     min-height: 42px;
   }
+
+  .penalty-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 10px;
+    min-height: 0;
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+
+  .penalty-row__date {
+    grid-column: 1;
+    text-align: left;
+  }
+
+  .penalty-row__points {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    text-align: right;
+  }
 }
 
 @media (max-width: 420px) {
-  .penalty-card {
-    padding: 14px;
+  .summary-box,
+  .detail-header {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .summary-title {
-    font-size: 20px;
+  .summary-btn {
+    width: 100%;
   }
 }
 </style>

@@ -517,13 +517,13 @@ onMounted(() => {
 @media (max-width: 700px) {
   .finance-page {
     height: auto;
-    margin-top: 32px;
+    margin-top: 24px;
     padding: 0;
   }
 
   .finance-card {
-    padding: 14px;
-    border-radius: 24px;
+    padding: 12px;
+    border-radius: 18px;
   }
 
   .accent-line {
@@ -531,14 +531,15 @@ onMounted(() => {
   }
 
   .finance-summary {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 16px;
-    border-radius: 18px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 12px;
+    border-radius: 14px;
   }
 
   .finance-summary__title {
-    font-size: 22px;
+    font-size: 19px;
   }
 
   .finance-summary__subtitle {
@@ -561,25 +562,31 @@ onMounted(() => {
   }
 
   .charge-row {
-    gap: 14px;
-    padding: 16px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 16px;
   }
 
   .charge-meta {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+    align-items: flex-end;
+    gap: 8px;
   }
 
   .charge-topline {
     width: 100%;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 4px;
   }
 
   .pay-btn,
   .pay-btn.small {
-    width: 100%;
-    padding: 12px 16px;
+    width: auto;
+    padding: 9px 13px;
+    font-size: 13px;
   }
 
   .empty-state {
@@ -588,10 +595,28 @@ onMounted(() => {
 }
 
 @media (max-width: 420px) {
+  .finance-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .finance-summary .pay-btn {
+    width: 100%;
+  }
+
   .charge-topline {
-    flex-direction: column;
     align-items: flex-start;
-    gap: 6px;
+  }
+
+  .charge-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .charge-meta {
+    align-items: stretch;
+  }
+
+  .pay-btn.small {
+    width: 100%;
   }
 
   .charge-amount,
