@@ -1,29 +1,48 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, watch } from 'vue'
 import NewsCard from '@/roles/student/entities/news/ui/NewsCard.vue'
 import { getNews } from '@/roles/student/pages/news/NewsApi'
 import type { NewsItem } from '@/roles/student/entities/news/model/types'
+import { useI18n } from '@/app/i18n'
 
 const news = ref<NewsItem[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
+const { locale, t } = useI18n()
+const pageTitle = computed(() => t('nav.news'))
 
-onMounted(async () => {
+let requestId = 0
+
+const fetchNews = async () => {
+  const currentRequestId = ++requestId
+  loading.value = true
+  error.value = null
+
   try {
-    news.value = await getNews()
+    const items = await getNews()
+
+    if (currentRequestId === requestId) {
+      news.value = items
+    }
   } catch (e) {
-    error.value = 'Ошибка загрузки новостей'
+    if (currentRequestId === requestId) {
+      error.value = t('pages.news.loadError')
+    }
   } finally {
-    loading.value = false
+    if (currentRequestId === requestId) {
+      loading.value = false
+    }
   }
-})
+}
+
+watch(locale, fetchNews, { immediate: true })
 </script>
 
 <template>
   <section class="news-page">
-    <h1 class="page-title">НОВОСТИ</h1>
+    <h1 class="page-title">{{ pageTitle }}</h1>
 
-    <div v-if="loading">Загрузка...</div>
+    <div v-if="loading">{{ t('pages.news.loading') }}</div>
     <div v-else-if="error">{{ error }}</div>
 
     <div v-else class="news-list">
@@ -51,6 +70,7 @@ onMounted(async () => {
   font-weight: 700;
   color: #111827;
   text-align: center;
+  text-transform: uppercase;
 }
 
 .news-list {

@@ -1,19 +1,33 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { getDateLocale, useI18n } from '@/app/i18n'
 import type { NewsItem } from '../model/types'
 
-defineProps<{
+const props = defineProps<{
   item: NewsItem
 }>()
 
+const { locale } = useI18n()
+
+const localizedTitle = computed(() => {
+  const translated = props.item.translations?.[locale.value]?.title
+  return translated?.trim() || props.item.title_ru || props.item.title
+})
+
+const localizedDescription = computed(() => {
+  const translated = props.item.translations?.[locale.value]?.description
+  return translated?.trim() || props.item.description_ru || props.item.description
+})
+
 const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString()
+  return new Date(date).toLocaleDateString(getDateLocale())
 }
 </script>
 
 <template>
   <article class="news-card">
-    <h3 class="title">{{ item.title }}</h3>
-    <p class="description">{{ item.description }}</p>
+    <h3 class="title">{{ localizedTitle }}</h3>
+    <p class="description">{{ localizedDescription }}</p>
     <span class="date">{{ formatDate(item.created_at) }}</span>
   </article>
 </template>
