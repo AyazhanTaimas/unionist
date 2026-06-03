@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { getFinanceCharges, openCheckout, type FinanceCharge } from './financeApi'
 import { getDateLocale, useI18n } from '@/app/i18n'
+import { formatKzt } from '@/app/format/money'
 
 type ChargeTab = 'payments' | 'penalty'
 type ChargeKind = 'housing' | 'penalty' | 'gym' | 'other'
@@ -166,7 +167,7 @@ const summarySubtitle = computed(() => {
 })
 
 function formatAmount(value: number) {
-  return new Intl.NumberFormat(getDateLocale()).format(value) + ' ₸'
+  return formatKzt(value)
 }
 
 async function handlePay(chargeId: number) {

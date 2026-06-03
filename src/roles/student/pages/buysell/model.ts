@@ -1,4 +1,5 @@
 import type { BuySellListing } from './api'
+import { formatKzt } from '@/app/format/money'
 
 const listingAccents = [
   'linear-gradient(135deg, #2563eb, #4f46e5)',
@@ -9,7 +10,7 @@ const listingAccents = [
 ]
 
 export function formatListingPrice(price: number) {
-  return `${new Intl.NumberFormat('ru-RU').format(price)} ₸`
+  return formatKzt(price)
 }
 
 export function formatListingDate(value?: string | null) {

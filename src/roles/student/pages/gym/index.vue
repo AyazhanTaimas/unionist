@@ -12,6 +12,7 @@ import {
   type GymPlan,
 } from './gymApi'
 import { getDateLocale, useI18n } from '@/app/i18n'
+import { formatKzt } from '@/app/format/money'
 
 type CalendarCell = {
   key: string
@@ -402,7 +403,7 @@ function formatCurrency(value?: number | null) {
     return '—'
   }
 
-  return `${new Intl.NumberFormat(getDateLocale()).format(Number(value))} ₸`
+  return formatKzt(value)
 }
 </script>
 
