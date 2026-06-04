@@ -214,6 +214,11 @@ export const router = createRouter({
           component: () => import('@/roles/dorm-admin/pages/penalty/Penalty.vue'),
         },
         {
+          path: 'students',
+          name: 'dorm-admin-students',
+          component: () => import('@/roles/employee/pages/students/StudentsPage.vue'),
+        },
+        {
           path: 'repairs',
           redirect: '/dorm-admin/news',
         },
