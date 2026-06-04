@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from '@/app/i18n'
 import CreateNewsModal from './CreateNewsModal.vue'
 import { getNews, deleteNews } from './api'
 import type { NewsItem } from '@/roles/student/entities/news/model/types'
+
+type NewsLocale = 'ru' | 'kk' | 'en'
 
 const newsList = ref<NewsItem[]>([])
 const showModal = ref(false)
@@ -12,6 +15,7 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const route = useRoute()
 const router = useRouter()
+const { t, locale } = useI18n()
 
 const fetchNews = async () => {
   loading.value = true
@@ -19,7 +23,7 @@ const fetchNews = async () => {
   try {
     newsList.value = await getNews()
   } catch {
-    error.value = 'Ошибка загрузки новостей'
+    error.value = t('pages.news.loadError')
   } finally {
     loading.value = false
   }
@@ -49,6 +53,20 @@ const handleCreated = async () => {
   await closeModal()
 }
 
+const getLocalizedTitle = (item: NewsItem) => {
+  const currentLocale = locale.value as NewsLocale
+  const translated = item.translations?.[currentLocale]?.title
+
+  return translated?.trim() || item.title_ru || item.title
+}
+
+const getLocalizedDescription = (item: NewsItem) => {
+  const currentLocale = locale.value as NewsLocale
+  const translated = item.translations?.[currentLocale]?.description
+
+  return translated?.trim() || item.description_ru || item.description
+}
+
 watch(
   () => route.name,
   (name) => {
@@ -66,30 +84,31 @@ watch(
 )
 
 const remove = async (id: number) => {
-  if (!confirm('Удалить новость?')) return
+  if (!confirm(t('pages.news.deleteConfirm'))) return
 
   try {
     await deleteNews(id)
     await fetchNews()
-  } catch (error: any) {
-    alert(error?.response?.data?.message || 'Не удалось удалить новость')
+  } catch (error) {
+    console.error(error)
+    alert(t('pages.news.deleteError'))
   }
 }
 
-onMounted(fetchNews)
+watch(locale, fetchNews, { immediate: true })
 </script>
 
 <template>
   <div class="news-page">
     <div class="header">
-      <h2>Новости</h2>
+      <h2>{{ t('pages.news.title') }}</h2>
 
       <button class="add-btn" @click="openCreate">
         +
       </button>
     </div>
 
-    <div v-if="loading">Загрузка...</div>
+    <div v-if="loading">{{ t('pages.news.loading') }}</div>
     <div v-else-if="error">{{ error }}</div>
 
     <div v-else class="news-list">
@@ -98,8 +117,8 @@ onMounted(fetchNews)
         :key="item.id"
         class="news-card"
       >
-        <h3>{{ item.title }}</h3>
-        <p>{{ item.description }}</p>
+        <h3>{{ getLocalizedTitle(item) }}</h3>
+        <p>{{ getLocalizedDescription(item) }}</p>
 
         <div class="actions">
           <button class="edit" @click="openEdit(item)">✏️</button>

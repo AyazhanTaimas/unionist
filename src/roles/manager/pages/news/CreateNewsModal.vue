@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useI18n } from '@/app/i18n'
 import { createNews, updateNews } from './api'
 
 type NewsLocale = 'ru' | 'kk' | 'en'
@@ -9,14 +10,18 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits(['close', 'created'])
+const { t } = useI18n()
 
 const locales: Array<{ code: NewsLocale; label: string }> = [
   { code: 'ru', label: 'RU' },
-  { code: 'kk', label: 'KK' },
+  { code: 'kk', label: 'KZ' },
   { code: 'en', label: 'EN' },
 ]
 
 const activeLocale = ref<NewsLocale>('ru')
+const activeLocaleLabel = computed(
+  () => locales.find((item) => item.code === activeLocale.value)?.label || activeLocale.value.toUpperCase()
+)
 const form = ref<Record<NewsLocale, { title: string; description: string }>>({
   ru: { title: '', description: '' },
   kk: { title: '', description: '' },
@@ -55,9 +60,6 @@ const handleFile = (e: any) => {
   file.value = e.target.files[0]
 }
 
-const getErrorMessage = (error: any, fallback: string) =>
-  error?.response?.data?.message || fallback
-
 const submit = async () => {
   const emptyLocale = locales.find(
     (item) =>
@@ -67,7 +69,7 @@ const submit = async () => {
 
   if (emptyLocale) {
     activeLocale.value = emptyLocale.code
-    return alert(`Заполните заголовок и описание для ${emptyLocale.label}`)
+    return alert(t('pages.news.fillLocale', { locale: emptyLocale.label }))
   }
 
   loading.value = true
@@ -89,15 +91,9 @@ const submit = async () => {
     }
 
     emit('created')
-  } catch (error: any) {
-    alert(
-      getErrorMessage(
-        error,
-        props.news
-          ? 'Не удалось обновить новость'
-          : 'Не удалось создать новость'
-      )
-    )
+  } catch (error) {
+    console.error(error)
+    alert(props.news ? t('pages.news.updateError') : t('pages.news.createError'))
   } finally {
     loading.value = false
   }
@@ -108,7 +104,7 @@ const submit = async () => {
   <div class="overlay">
     <div class="modal">
       <h2>
-        {{ props.news ? 'Редактировать новость' : 'Создать новость' }}
+        {{ props.news ? t('pages.news.editTitle') : t('pages.news.createTitle') }}
       </h2>
 
       <div class="language-tabs">
@@ -126,18 +122,18 @@ const submit = async () => {
 
       <div class="language-panel">
         <label>
-          <span>Заголовок {{ activeLocale.toUpperCase() }}</span>
+          <span>{{ t('common.title') }} {{ activeLocaleLabel }}</span>
           <input
             v-model="form[activeLocale].title"
-            placeholder="Заголовок"
+            :placeholder="t('common.title')"
           />
         </label>
 
         <label>
-          <span>Описание {{ activeLocale.toUpperCase() }}</span>
+          <span>{{ t('common.description') }} {{ activeLocaleLabel }}</span>
           <textarea
             v-model="form[activeLocale].description"
-            placeholder="Описание"
+            :placeholder="t('common.description')"
           />
         </label>
       </div>
@@ -146,11 +142,11 @@ const submit = async () => {
 
       <div class="actions">
         <button class="save" :disabled="loading" @click="submit">
-          {{ loading ? 'Сохранение...' : 'Сохранить' }}
+          {{ loading ? t('common.saving') : t('common.save') }}
         </button>
 
         <button @click="$emit('close')">
-          Отмена
+          {{ t('common.cancel') }}
         </button>
       </div>
     </div>
