@@ -3,7 +3,9 @@ import { computed, onMounted, ref } from 'vue'
 import { deleteUser, getUsers } from './api'
 import UserFormModal from './UserFormModal.vue'
 import type { ManagerUser } from './types'
+import { useI18n } from '@/app/i18n'
 
+const { t, dateLocale } = useI18n()
 const users = ref<ManagerUser[]>([])
 const search = ref('')
 const loading = ref(false)
@@ -47,9 +49,9 @@ const fetchUsers = async () => {
 
   try {
     users.value = await getUsers()
-  } catch (requestError: any) {
-    error.value =
-      requestError?.response?.data?.message || 'Не удалось загрузить пользователей'
+  } catch (requestError) {
+    console.error(requestError)
+    error.value = t('pages.managerUsers.loadError')
   } finally {
     loading.value = false
   }
@@ -78,7 +80,7 @@ const handleSaved = async (message: string) => {
 
 const removeUser = async (user: ManagerUser) => {
   const confirmed = confirm(
-    `Удалить пользователя ${user.lastname} ${user.name}?`
+    t('pages.managerUsers.deleteConfirm', { name: getFullName(user) })
   )
 
   if (!confirmed) return
@@ -88,23 +90,24 @@ const removeUser = async (user: ManagerUser) => {
 
   try {
     await deleteUser(user.id)
-    notice.value = 'Пользователь удален'
+    notice.value = t('pages.managerUsers.deleteSuccess')
     await fetchUsers()
-  } catch (requestError: any) {
-    alert(
-      requestError?.response?.data?.message || 'Не удалось удалить пользователя'
-    )
+  } catch (requestError) {
+    console.error(requestError)
+    alert(t('pages.managerUsers.deleteError'))
   } finally {
     deletingUserId.value = null
   }
 }
 
-const formatDate = (value: string) => {
+const formatDate = (value: string | null) => {
+  if (!value) return t('common.unknownDate')
+
   const date = new Date(value)
 
-  if (Number.isNaN(date.getTime())) return 'Дата неизвестна'
+  if (Number.isNaN(date.getTime())) return t('common.unknownDate')
 
-  return date.toLocaleString('ru-RU', {
+  return date.toLocaleString(dateLocale.value, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -114,7 +117,20 @@ const formatDate = (value: string) => {
 }
 
 const getFullName = (user: ManagerUser) =>
-  [user.lastname, user.name, user.middlename].filter(Boolean).join(' ')
+  [user.lastname, user.name, user.middlename].filter(Boolean).join(' ') || t('common.noName')
+
+const getRoleLabel = (role: string) => {
+  const key = role === 'dorm-admin' ? 'dormAdmin' : role
+  const label = t(`pages.managerUsers.roles.${key}`)
+
+  return label === `pages.managerUsers.roles.${key}` ? role : label
+}
+
+const getGenderLabel = (gender: string) => {
+  const label = t(`pages.managerUsers.genders.${gender}`)
+
+  return label === `pages.managerUsers.genders.${gender}` ? gender : label
+}
 
 onMounted(fetchUsers)
 </script>
@@ -123,43 +139,42 @@ onMounted(fetchUsers)
   <section class="users-page">
     <div class="hero">
       <div>
-        <p class="eyebrow">Manager / Users</p>
-        <h1>Пользователи</h1>
+        <p class="eyebrow">{{ t('pages.managerUsers.eyebrow') }}</p>
+        <h1>{{ t('pages.managerUsers.title') }}</h1>
         <p class="description">
-          Управление учетными записями общежития: список, создание, редактирование
-          и удаление пользователей.
+          {{ t('pages.managerUsers.description') }}
         </p>
       </div>
 
       <div class="hero-actions">
         <button class="secondary-btn" :disabled="loading" @click="fetchUsers">
-          {{ loading ? 'Обновление...' : 'Обновить' }}
+          {{ loading ? t('common.refreshing') : t('common.refresh') }}
         </button>
 
         <button class="primary-btn" @click="openCreate">
-          Создать пользователя
+          {{ t('pages.managerUsers.createUser') }}
         </button>
       </div>
     </div>
 
     <div class="stats">
       <article class="stat-card">
-        <span>Всего</span>
+        <span>{{ t('pages.managerUsers.all') }}</span>
         <strong>{{ stats.total }}</strong>
       </article>
 
       <article class="stat-card">
-        <span>Студенты</span>
+        <span>{{ t('pages.managerUsers.students') }}</span>
         <strong>{{ stats.students }}</strong>
       </article>
 
       <article class="stat-card">
-        <span>Менеджеры</span>
+        <span>{{ t('pages.managerUsers.managers') }}</span>
         <strong>{{ stats.managers }}</strong>
       </article>
 
       <article class="stat-card">
-        <span>Admin / Employee</span>
+        <span>{{ t('pages.managerUsers.staff') }}</span>
         <strong>{{ stats.staff }}</strong>
       </article>
     </div>
@@ -172,16 +187,16 @@ onMounted(fetchUsers)
         v-model="search"
         class="search-input"
         type="text"
-        placeholder="Поиск по имени, email, роли, ID"
+        :placeholder="t('pages.managerUsers.searchPlaceholder')"
       />
     </div>
 
     <div v-if="loading && !users.length" class="state-card">
-      Загрузка пользователей...
+      {{ t('pages.managerUsers.loading') }}
     </div>
 
     <div v-else-if="!filteredUsers.length" class="state-card">
-      Пользователи не найдены.
+      {{ t('pages.managerUsers.empty') }}
     </div>
 
     <div v-else class="users-grid">
@@ -196,37 +211,37 @@ onMounted(fetchUsers)
             <p class="subline">{{ user.email }}</p>
           </div>
 
-          <span class="role-badge">{{ user.role }}</span>
+          <span class="role-badge">{{ getRoleLabel(user.role) }}</span>
         </div>
 
         <div class="details-grid">
           <div class="detail">
             <span>ID</span>
-            <strong>{{ user.uni_id }}</strong>
+            <strong>{{ user.uni_id || t('common.notSpecified') }}</strong>
           </div>
 
           <div class="detail">
-            <span>Телефон</span>
-            <strong>{{ user.phone_number }}</strong>
+            <span>{{ t('common.phone') }}</span>
+            <strong>{{ user.phone_number || t('common.notSpecified') }}</strong>
           </div>
 
           <div class="detail">
-            <span>Пол</span>
-            <strong>{{ user.gender }}</strong>
+            <span>{{ t('pages.managerUsers.gender') }}</span>
+            <strong>{{ getGenderLabel(user.gender) }}</strong>
           </div>
 
           <div class="detail">
-            <span>Лимит дисциплины</span>
+            <span>{{ t('pages.managerUsers.disciplineLimit') }}</span>
             <strong>{{ user.discipline_limit }}</strong>
           </div>
         </div>
 
         <div class="footer">
-          <span class="date-label">Создан: {{ formatDate(user.created_at) }}</span>
+          <span class="date-label">{{ t('pages.managerUsers.createdAt') }}: {{ formatDate(user.created_at) }}</span>
 
           <div class="actions">
             <button class="edit-btn" @click="openEdit(user)">
-              Редактировать
+              {{ t('common.edit') }}
             </button>
 
             <button
@@ -234,7 +249,7 @@ onMounted(fetchUsers)
               :disabled="deletingUserId === user.id"
               @click="removeUser(user)"
             >
-              {{ deletingUserId === user.id ? 'Удаление...' : 'Удалить' }}
+              {{ deletingUserId === user.id ? t('common.deleting') : t('common.delete') }}
             </button>
           </div>
         </div>

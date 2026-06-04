@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { createUser, updateUser } from './api'
 import type { ManagerUser, ManagerUserPayload } from './types'
+import { useI18n } from '@/app/i18n'
 
 const props = defineProps<{
   user?: ManagerUser | null
@@ -12,8 +13,11 @@ const emit = defineEmits<{
   saved: [message: string]
 }>()
 
+const { t } = useI18n()
 const loading = ref(false)
 const error = ref<string | null>(null)
+const roleOptions = ['student', 'manager', 'dorm-admin', 'employee', 'admin']
+const genderOptions = ['male', 'female']
 
 const form = reactive<ManagerUserPayload>({
   role: 'student',
@@ -31,15 +35,15 @@ const form = reactive<ManagerUserPayload>({
 const isEditing = computed(() => Boolean(props.user))
 
 const title = computed(() =>
-  isEditing.value ? 'Редактировать пользователя' : 'Создать пользователя'
+  isEditing.value ? t('pages.managerUsers.editTitle') : t('pages.managerUsers.createTitle')
 )
 
 const submitLabel = computed(() => {
   if (loading.value) {
-    return isEditing.value ? 'Сохранение...' : 'Создание...'
+    return isEditing.value ? t('pages.managerUsers.saving') : t('pages.managerUsers.creating')
   }
 
-  return isEditing.value ? 'Сохранить' : 'Создать'
+  return isEditing.value ? t('pages.managerUsers.saveSubmit') : t('pages.managerUsers.createSubmit')
 })
 
 const resetForm = (user?: ManagerUser | null) => {
@@ -81,6 +85,19 @@ const getApiErrorMessage = (requestError: any, fallback: string) => {
   return message || fallback
 }
 
+const getRoleLabel = (role: string) => {
+  const key = role === 'dorm-admin' ? 'dormAdmin' : role
+  const label = t(`pages.managerUsers.roles.${key}`)
+
+  return label === `pages.managerUsers.roles.${key}` ? role : label
+}
+
+const getGenderLabel = (gender: string) => {
+  const label = t(`pages.managerUsers.genders.${gender}`)
+
+  return label === `pages.managerUsers.genders.${gender}` ? gender : label
+}
+
 const submit = async () => {
   error.value = null
   loading.value = true
@@ -103,23 +120,23 @@ const submit = async () => {
     }
 
     if (!isEditing.value && !payload.password) {
-      error.value = 'Введите пароль для нового пользователя'
+      error.value = t('pages.managerUsers.passwordRequired')
       return
     }
 
     if (props.user) {
       await updateUser(props.user.id, payload)
-      emit('saved', 'Пользователь обновлен')
+      emit('saved', t('pages.managerUsers.updateSuccess'))
     } else {
       await createUser(payload)
-      emit('saved', 'Пользователь создан')
+      emit('saved', t('pages.managerUsers.createSuccess'))
     }
   } catch (requestError: any) {
     error.value = getApiErrorMessage(
       requestError,
       isEditing.value
-        ? 'Не удалось обновить пользователя'
-        : 'Не удалось создать пользователя'
+        ? t('pages.managerUsers.updateError')
+        : t('pages.managerUsers.createError')
     )
   } finally {
     loading.value = false
@@ -132,67 +149,66 @@ const submit = async () => {
     <div class="modal">
       <div class="header">
         <div>
-          <p class="eyebrow">Manager / Users</p>
+          <p class="eyebrow">{{ t('pages.managerUsers.eyebrow') }}</p>
           <h2>{{ title }}</h2>
         </div>
 
-        <button class="close-btn" @click="$emit('close')">×</button>
+        <button class="close-btn" :aria-label="t('common.closeMenu')" @click="$emit('close')">×</button>
       </div>
 
       <div v-if="error" class="error-box">{{ error }}</div>
 
       <div class="grid">
         <label class="field">
-          <span>Имя</span>
-          <input v-model="form.name" placeholder="Имя" />
+          <span>{{ t('common.name') }}</span>
+          <input v-model="form.name" :placeholder="t('common.name')" />
         </label>
 
         <label class="field">
-          <span>Фамилия</span>
-          <input v-model="form.lastname" placeholder="Фамилия" />
+          <span>{{ t('pages.managerUsers.lastname') }}</span>
+          <input v-model="form.lastname" :placeholder="t('pages.managerUsers.lastname')" />
         </label>
 
         <label class="field">
-          <span>Отчество</span>
-          <input v-model="form.middlename" placeholder="Отчество" />
+          <span>{{ t('pages.managerUsers.middlename') }}</span>
+          <input v-model="form.middlename" :placeholder="t('pages.managerUsers.middlename')" />
         </label>
 
         <label class="field">
-          <span>Email</span>
+          <span>{{ t('common.email') }}</span>
           <input v-model="form.email" type="email" placeholder="email@example.com" />
         </label>
 
         <label class="field">
-          <span>Телефон</span>
+          <span>{{ t('common.phone') }}</span>
           <input v-model="form.phone_number" placeholder="+77770000000" />
         </label>
 
         <label class="field">
-          <span>University ID</span>
+          <span>{{ t('pages.managerUsers.universityId') }}</span>
           <input v-model="form.uni_id" placeholder="U12345" />
         </label>
 
         <label class="field">
-          <span>Роль</span>
+          <span>{{ t('pages.managerUsers.role') }}</span>
           <select v-model="form.role">
-            <option value="student">student</option>
-            <option value="manager">manager</option>
-            <option value="dorm-admin">dorm-admin</option>
-            <option value="employee">employee</option>
-            <option value="admin">admin</option>
+            <option v-for="role in roleOptions" :key="role" :value="role">
+              {{ getRoleLabel(role) }}
+            </option>
           </select>
         </label>
 
         <label class="field">
-          <span>Пол</span>
+          <span>{{ t('pages.managerUsers.gender') }}</span>
           <select v-model="form.gender">
-            <option value="male">male</option>
-            <option value="female">female</option>
+            <option v-for="gender in genderOptions" :key="gender" :value="gender">
+              {{ getGenderLabel(gender) }}
+            </option>
           </select>
         </label>
 
         <label class="field">
-          <span>Лимит дисциплины</span>
+          <span>{{ t('pages.managerUsers.disciplineLimit') }}</span>
           <input
             v-model.number="form.discipline_limit"
             type="number"
@@ -202,11 +218,11 @@ const submit = async () => {
         </label>
 
         <label class="field">
-          <span>{{ isEditing ? 'Новый пароль' : 'Пароль' }}</span>
+          <span>{{ isEditing ? t('pages.managerUsers.newPassword') : t('common.password') }}</span>
           <input
             v-model="form.password"
             type="password"
-            :placeholder="isEditing ? 'Оставьте пустым, чтобы не менять' : 'Минимум 8 символов'"
+            :placeholder="isEditing ? t('pages.managerUsers.passwordEditPlaceholder') : t('pages.managerUsers.passwordPlaceholder')"
           />
         </label>
       </div>
@@ -217,7 +233,7 @@ const submit = async () => {
         </button>
 
         <button class="secondary-btn" :disabled="loading" @click="$emit('close')">
-          Отмена
+          {{ t('common.cancel') }}
         </button>
       </div>
     </div>
