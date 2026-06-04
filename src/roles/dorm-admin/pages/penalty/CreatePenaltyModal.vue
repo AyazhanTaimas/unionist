@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from '@/app/i18n'
 import {
   createPenalty,
   getPenaltyRules,
@@ -27,6 +28,7 @@ const targetMode = ref<'student' | 'room'>('student')
 const targets = ref<PenaltyTarget[]>([])
 const roomTargets = ref<PenaltyRoomTarget[]>([])
 const rules = ref<PenaltyRule[]>([])
+const { t, locale } = useI18n()
 
 const form = ref<{
   user_id: string | number
@@ -105,6 +107,36 @@ const setTargetMode = (mode: 'student' | 'room') => {
   }
 }
 
+const getResidentsPluralKey = (count: number) => {
+  const absoluteCount = Math.abs(count)
+
+  if (
+    locale.value === 'ru' &&
+    absoluteCount % 10 >= 2 &&
+    absoluteCount % 10 <= 4 &&
+    (absoluteCount % 100 < 12 || absoluteCount % 100 > 14)
+  ) {
+    return 'pages.penalty.residentsCountFew'
+  }
+
+  if (
+    locale.value === 'ru' &&
+    absoluteCount % 10 === 1 &&
+    absoluteCount % 100 !== 11
+  ) {
+    return 'pages.penalty.residentsCountOne'
+  }
+
+  if (locale.value === 'en' && absoluteCount === 1) {
+    return 'pages.penalty.residentsCountOne'
+  }
+
+  return 'pages.penalty.residentsCountMany'
+}
+
+const residentsLabel = (count: number) =>
+  t(getResidentsPluralKey(count), { count })
+
 const handleFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement
   selectedFiles.value = Array.from(input.files || [])
@@ -127,7 +159,7 @@ const loadOptions = async () => {
   } catch (requestError: any) {
     loadError.value =
       requestError?.response?.data?.message ||
-      'Не удалось загрузить правила, список студентов и комнат'
+      t('pages.penalty.formLoadError')
   } finally {
     loading.value = false
   }
@@ -138,27 +170,29 @@ const submit = async () => {
   const pointsValue = String(form.value.points).trim()
 
   if (targetMode.value === 'student' && !form.value.user_id) {
-    formError.value = 'Выберите студента'
+    formError.value = t('pages.penalty.chooseStudent')
     return
   }
 
   if (targetMode.value === 'room' && !form.value.room_id) {
-    formError.value = 'Выберите комнату'
+    formError.value = t('pages.penalty.chooseRoom')
     return
   }
 
   if (!form.value.rule_id) {
-    formError.value = 'Выберите правило штрафа'
+    formError.value = t('pages.penalty.chooseRule')
     return
   }
 
   if (pointsValue && Number(pointsValue) < 0) {
-    formError.value = 'Количество баллов не может быть отрицательным'
+    formError.value = t('pages.penalty.negativePoints')
     return
   }
 
   if (pointsValue && Number(pointsValue) > MAX_PENALTY_POINTS) {
-    formError.value = `Количество баллов не должно превышать ${MAX_PENALTY_POINTS}`
+    formError.value = t('pages.penalty.maxPoints', {
+      max: MAX_PENALTY_POINTS,
+    })
     return
   }
 
@@ -187,12 +221,12 @@ const submit = async () => {
       payload.append('evidences[]', file)
     })
 
-    const message = await createPenalty(payload)
+    await createPenalty(payload)
 
-    emit('created', message)
+    emit('created', t('pages.penalty.createSuccess'))
   } catch (requestError: any) {
     formError.value =
-      requestError?.response?.data?.message || 'Не удалось создать штраф'
+      requestError?.response?.data?.message || t('pages.penalty.createError')
   } finally {
     saving.value = false
   }
@@ -206,16 +240,16 @@ onMounted(loadOptions)
     <div class="modal">
       <div class="modal-header">
         <div>
-          <h2>Выдать штраф</h2>
-          <p>Выберите студента или комнату, правило и при необходимости загрузите фото нарушения.</p>
+          <h2>{{ t('pages.penalty.create') }}</h2>
+          <p>{{ t('pages.penalty.createSubtitle') }}</p>
         </div>
 
-        <button class="close-btn" @click="emit('close')">✕</button>
+        <button class="close-btn" :aria-label="t('common.closeMenu')" @click="emit('close')">✕</button>
       </div>
 
       <div class="modal-content">
         <div v-if="loading" class="state-box">
-          Загрузка формы...
+          {{ t('pages.penalty.formLoading') }}
         </div>
 
         <div v-else-if="loadError" class="state-box state-box--error">
@@ -230,7 +264,7 @@ onMounted(loadOptions)
               type="button"
               @click="setTargetMode('student')"
             >
-              Студент
+              {{ t('pages.penalty.student') }}
             </button>
 
             <button
@@ -239,33 +273,33 @@ onMounted(loadOptions)
               type="button"
               @click="setTargetMode('room')"
             >
-              Комната
+              {{ t('common.room') }}
             </button>
           </div>
 
           <label>
-            {{ targetMode === 'student' ? 'Поиск студента' : 'Поиск комнаты' }}
+            {{ targetMode === 'student' ? t('pages.penalty.searchStudent') : t('pages.penalty.searchRoom') }}
           </label>
           <input
             v-model="targetQuery"
             :placeholder="
               targetMode === 'student'
-                ? 'Имя, email, Uni ID или комната'
-                : 'Комната, имя жильца, email или Uni ID'
+                ? t('pages.penalty.searchStudentPlaceholder')
+                : t('pages.penalty.searchRoomPlaceholder')
             "
           />
 
           <template v-if="targetMode === 'student'">
-            <label>Студент</label>
+            <label>{{ t('pages.penalty.student') }}</label>
             <select v-model="form.user_id">
-              <option value="">Выберите студента</option>
+              <option value="">{{ t('pages.penalty.chooseStudent') }}</option>
               <option
                 v-for="target in filteredTargets"
                 :key="target.settlement_id"
                 :value="target.user?.id || ''"
               >
                 {{
-                  `${target.user?.full_name || 'Без имени'} • ${target.room.label} • ${target.user?.uni_id || 'без ID'}`
+                  `${target.user?.full_name || t('common.noName')} • ${target.room.label} • ${target.user?.uni_id || t('common.noId')}`
                 }}
               </option>
             </select>
@@ -276,25 +310,23 @@ onMounted(loadOptions)
           </template>
 
           <template v-else>
-            <label>Комната</label>
+            <label>{{ t('common.room') }}</label>
             <select v-model="form.room_id">
-              <option value="">Выберите комнату</option>
+              <option value="">{{ t('pages.penalty.chooseRoom') }}</option>
               <option
                 v-for="target in filteredRoomTargets"
                 :key="target.room_id"
                 :value="target.room_id"
               >
                 {{
-                  `${target.room.label} • ${target.active_residents_count} ${
-                    target.active_residents_count === 1 ? 'житель' : 'жителя'
-                  }`
+                  `${target.room.label} • ${residentsLabel(target.active_residents_count)}`
                 }}
               </option>
             </select>
 
             <div v-if="selectedRoomTarget" class="selection-note room-selection">
               <strong>
-                В комнате проживают: {{ selectedRoomTarget.active_residents_count }}
+                {{ t('pages.penalty.residentsInRoom', { count: selectedRoomTarget.active_residents_count }) }}
               </strong>
               <span>
                 {{
@@ -306,38 +338,38 @@ onMounted(loadOptions)
             </div>
           </template>
 
-          <label>Правило штрафа</label>
+          <label>{{ t('pages.penalty.rule') }}</label>
           <select v-model="form.rule_id">
-            <option value="">Выберите правило</option>
+            <option value="">{{ t('pages.penalty.chooseRule') }}</option>
             <option v-for="rule in rules" :key="rule.id" :value="rule.id">
               {{ `${rule.code} • ${rule.title}` }}
             </option>
           </select>
 
           <div v-if="selectedRule" class="selection-note">
-            По умолчанию: {{ selectedRule.default_points }} баллов
-            <span v-if="selectedRule.redeemable">• допускает отработку</span>
+            {{ t('pages.penalty.defaultPoints', { points: selectedRule.default_points }) }}
+            <span v-if="selectedRule.redeemable">• {{ t('pages.penalty.redeemableRule') }}</span>
             <span v-if="selectedRule.creates_financial_charge">
-              • создаст финансовое начисление
+              • {{ t('pages.penalty.financialChargeRule') }}
             </span>
           </div>
 
-          <label>Баллы</label>
+          <label>{{ t('pages.penalty.points') }}</label>
           <input
             v-model="form.points"
             type="number"
             min="0"
             :max="MAX_PENALTY_POINTS"
-            placeholder="Оставьте пустым, чтобы взять значение из правила"
+            :placeholder="t('pages.penalty.pointsPlaceholder')"
           />
 
-          <label>Описание</label>
+          <label>{{ t('common.description') }}</label>
           <textarea
             v-model="form.description"
-            placeholder="Контекст нарушения, обстоятельства, дополнительные детали"
+            :placeholder="t('pages.penalty.descriptionPlaceholder')"
           />
 
-          <label>Фото / доказательства</label>
+          <label>{{ t('pages.penalty.photoEvidence') }}</label>
           <input
             type="file"
             accept="image/*"
@@ -346,8 +378,7 @@ onMounted(loadOptions)
           />
 
           <p class="helper-text">
-            Можно прикрепить несколько изображений. Файлы будут загружены в backend,
-            а в БД сохранится путь к каждому изображению.
+            {{ t('pages.penalty.evidenceHelper') }}
           </p>
 
           <div v-if="selectedFiles.length" class="file-list">
@@ -363,9 +394,9 @@ onMounted(loadOptions)
       </div>
 
       <div class="actions">
-        <button class="cancel-btn" @click="emit('close')">Отмена</button>
+        <button class="cancel-btn" @click="emit('close')">{{ t('common.cancel') }}</button>
         <button class="submit-btn" :disabled="saving || loading" @click="submit">
-          {{ saving ? 'Сохранение...' : 'Создать штраф' }}
+          {{ saving ? t('common.saving') : t('pages.penalty.createSubmit') }}
         </button>
       </div>
     </div>

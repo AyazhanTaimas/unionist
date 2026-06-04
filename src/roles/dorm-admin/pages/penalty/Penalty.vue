@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from '@/app/i18n'
 import CreatePenaltyModal from './CreatePenaltyModal.vue'
 import {
   approvePenaltyRedemption,
@@ -19,6 +20,7 @@ const showModal = ref(false)
 const search = ref('')
 const statusFilter = ref<FilterStatus>('all')
 const actionKey = ref<string | null>(null)
+const { t, locale, dateLocale } = useI18n()
 
 const filteredPenalties = computed(() => {
   const query = search.value.trim().toLowerCase()
@@ -72,7 +74,7 @@ const fetchPenalties = async () => {
     penalties.value = await getManagedPenalties()
   } catch (requestError: any) {
     error.value =
-      requestError?.response?.data?.message || 'Не удалось загрузить штрафы'
+      requestError?.response?.data?.message || t('pages.penalty.loadError')
     penalties.value = []
   } finally {
     loading.value = false
@@ -80,12 +82,12 @@ const fetchPenalties = async () => {
 }
 
 const formatDate = (value: string | null) => {
-  if (!value) return 'Дата неизвестна'
+  if (!value) return t('common.unknownDate')
 
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Дата неизвестна'
+  if (Number.isNaN(date.getTime())) return t('common.unknownDate')
 
-  return date.toLocaleString('ru-RU', {
+  return date.toLocaleString(dateLocale.value, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -105,11 +107,11 @@ const getInitials = (fullName?: string | null) =>
 const statusLabel = (status: string) => {
   switch (status) {
     case 'active':
-      return 'Активен'
+      return t('pages.penalty.statusActive')
     case 'resolved':
-      return 'Закрыт'
+      return t('pages.penalty.statusResolved')
     case 'cancelled':
-      return 'Отменен'
+      return t('pages.penalty.statusCancelled')
     default:
       return status
   }
@@ -118,22 +120,28 @@ const statusLabel = (status: string) => {
 const redemptionLabel = (status: string | null) => {
   switch (status) {
     case 'pending':
-      return 'Ожидает'
+      return t('pages.penalty.redemptionPending')
     case 'approved':
-      return 'Одобрена'
+      return t('pages.penalty.redemptionApproved')
     case 'rejected':
-      return 'Отклонена'
+      return t('pages.penalty.redemptionRejected')
     default:
-      return 'Нет'
+      return t('pages.penalty.noRedemption')
   }
 }
 
-const pointsLabel = (points: number) =>
-  `${points} ${
-    Math.abs(points) % 10 === 1 && Math.abs(points) % 100 !== 11
-      ? 'балл'
-      : 'баллов'
-  }`
+const pointsLabel = (points: number) => {
+  const absolutePoints = Math.abs(points)
+  const key =
+    (locale.value === 'ru' &&
+      absolutePoints % 10 === 1 &&
+      absolutePoints % 100 !== 11) ||
+    (locale.value === 'en' && absolutePoints === 1)
+      ? 'pages.penalty.pointsCountOne'
+      : 'pages.penalty.pointsCountMany'
+
+  return t(key, { count: points })
+}
 
 const isExternalLink = (value: string) => /^https?:\/\//i.test(value)
 
@@ -148,7 +156,7 @@ const handleCreated = async (message: string) => {
 
 const cancelPenaltyItem = async (penalty: ManagedPenalty) => {
   const description = window.prompt(
-    'Причина отмены штрафа (необязательно)',
+    t('pages.penalty.cancelPrompt'),
     penalty.description || ''
   )
 
@@ -159,11 +167,12 @@ const cancelPenaltyItem = async (penalty: ManagedPenalty) => {
   notice.value = null
 
   try {
-    notice.value = await cancelPenalty(penalty.id, description.trim() || undefined)
+    await cancelPenalty(penalty.id, description.trim() || undefined)
+    notice.value = t('pages.penalty.cancelSuccess')
     await fetchPenalties()
   } catch (requestError: any) {
     error.value =
-      requestError?.response?.data?.message || 'Не удалось отменить штраф'
+      requestError?.response?.data?.message || t('pages.penalty.cancelError')
   } finally {
     actionKey.value = null
   }
@@ -173,7 +182,7 @@ const approveRedemption = async (penalty: ManagedPenalty) => {
   const redemption = penalty.pending_redemption
   if (!redemption) return
 
-  const confirmed = window.confirm('Одобрить заявку на отработку штрафа?')
+  const confirmed = window.confirm(t('pages.penalty.approveConfirm'))
   if (!confirmed) return
 
   actionKey.value = `approve-${redemption.id}`
@@ -181,11 +190,12 @@ const approveRedemption = async (penalty: ManagedPenalty) => {
   notice.value = null
 
   try {
-    notice.value = await approvePenaltyRedemption(redemption.id)
+    await approvePenaltyRedemption(redemption.id)
+    notice.value = t('pages.penalty.approveSuccess')
     await fetchPenalties()
   } catch (requestError: any) {
     error.value =
-      requestError?.response?.data?.message || 'Не удалось одобрить заявку'
+      requestError?.response?.data?.message || t('pages.penalty.approveError')
   } finally {
     actionKey.value = null
   }
@@ -195,7 +205,7 @@ const rejectRedemption = async (penalty: ManagedPenalty) => {
   const redemption = penalty.pending_redemption
   if (!redemption) return
 
-  const confirmed = window.confirm('Отклонить заявку на отработку штрафа?')
+  const confirmed = window.confirm(t('pages.penalty.rejectConfirm'))
   if (!confirmed) return
 
   actionKey.value = `reject-${redemption.id}`
@@ -203,11 +213,12 @@ const rejectRedemption = async (penalty: ManagedPenalty) => {
   notice.value = null
 
   try {
-    notice.value = await rejectPenaltyRedemption(redemption.id)
+    await rejectPenaltyRedemption(redemption.id)
+    notice.value = t('pages.penalty.rejectSuccess')
     await fetchPenalties()
   } catch (requestError: any) {
     error.value =
-      requestError?.response?.data?.message || 'Не удалось отклонить заявку'
+      requestError?.response?.data?.message || t('pages.penalty.rejectError')
   } finally {
     actionKey.value = null
   }
@@ -220,43 +231,42 @@ onMounted(fetchPenalties)
   <section class="penalties-page">
     <div class="hero">
       <div>
-        <p class="eyebrow">Dorm Admin / Penalty</p>
-        <h1>Штрафы общежития</h1>
+        <p class="eyebrow">{{ t('pages.penalty.dormEyebrow') }}</p>
+        <h1>{{ t('pages.penalty.dormTitle') }}</h1>
         <p class="description">
-          Управление дисциплинарными штрафами в модуле Penalty: выдача новых
-          штрафов, отслеживание активных кейсов и обработка заявок на отработку.
+          {{ t('pages.penalty.dormSubtitle') }}
         </p>
       </div>
 
       <div class="hero-actions">
         <button class="secondary-btn" :disabled="loading" @click="fetchPenalties">
-          {{ loading ? 'Обновление...' : 'Обновить' }}
+          {{ loading ? t('common.refreshing') : t('common.refresh') }}
         </button>
 
         <button class="primary-btn" @click="showModal = true">
-          Выдать штраф
+          {{ t('pages.penalty.create') }}
         </button>
       </div>
     </div>
 
     <div class="stats">
       <article class="stat-card">
-        <span>Всего штрафов</span>
+        <span>{{ t('pages.penalty.total') }}</span>
         <strong>{{ stats.total }}</strong>
       </article>
 
       <article class="stat-card">
-        <span>Активные</span>
+        <span>{{ t('pages.penalty.active') }}</span>
         <strong>{{ stats.active }}</strong>
       </article>
 
       <article class="stat-card">
-        <span>Закрытые</span>
+        <span>{{ t('pages.penalty.closed') }}</span>
         <strong>{{ stats.resolved }}</strong>
       </article>
 
       <article class="stat-card warning">
-        <span>Заявки на отработку</span>
+        <span>{{ t('pages.penalty.redemptionRequests') }}</span>
         <strong>{{ stats.pendingRedemptions }}</strong>
       </article>
     </div>
@@ -269,24 +279,24 @@ onMounted(fetchPenalties)
         v-model="search"
         class="search-input"
         type="text"
-        placeholder="Поиск по студенту, комнате, правилу, описанию"
+        :placeholder="t('pages.penalty.searchPlaceholder')"
       />
 
       <select v-model="statusFilter" class="status-select">
-        <option value="all">Все статусы</option>
-        <option value="active">Активные</option>
-        <option value="resolved">Закрытые</option>
-        <option value="cancelled">Отмененные</option>
-        <option value="pending">Есть отработка</option>
+        <option value="all">{{ t('pages.penalty.allStatuses') }}</option>
+        <option value="active">{{ t('pages.penalty.active') }}</option>
+        <option value="resolved">{{ t('pages.penalty.closed') }}</option>
+        <option value="cancelled">{{ t('common.cancelled') }}</option>
+        <option value="pending">{{ t('pages.penalty.hasRedemption') }}</option>
       </select>
     </div>
 
     <div v-if="loading && !penalties.length" class="state-card">
-      Загрузка штрафов...
+      {{ t('pages.penalty.loading') }}
     </div>
 
     <div v-else-if="!filteredPenalties.length" class="state-card">
-      {{ penalties.length ? 'По текущим фильтрам штрафы не найдены.' : 'Штрафов пока нет.' }}
+      {{ penalties.length ? t('pages.penalty.noFilterItems') : t('pages.penalty.noItems') }}
     </div>
 
     <div v-else class="penalties-grid">
@@ -298,7 +308,7 @@ onMounted(fetchPenalties)
         <div class="card-head">
           <div>
             <p class="rule-code">{{ penalty.rule?.code || 'PENALTY' }}</p>
-            <h2>{{ penalty.rule?.title || 'Без названия' }}</h2>
+            <h2>{{ penalty.rule?.title || t('pages.penalty.untitled') }}</h2>
           </div>
 
           <span class="status-badge" :class="penalty.status">
@@ -313,7 +323,7 @@ onMounted(fetchPenalties)
 
           <div>
             <div class="student-name">
-              {{ penalty.student?.full_name || 'Студент не найден' }}
+              {{ penalty.student?.full_name || t('pages.penalty.studentMissing') }}
             </div>
             <div class="student-meta">
               {{ penalty.room.label }}
@@ -324,22 +334,22 @@ onMounted(fetchPenalties)
 
         <div class="details-grid">
           <div class="detail-item">
-            <span>Баллы</span>
+            <span>{{ t('pages.penalty.points') }}</span>
             <strong>{{ pointsLabel(penalty.points) }}</strong>
           </div>
 
           <div class="detail-item">
-            <span>Выдан</span>
+            <span>{{ t('pages.penalty.issued') }}</span>
             <strong>{{ formatDate(penalty.created_at) }}</strong>
           </div>
 
           <div class="detail-item">
-            <span>Создал</span>
-            <strong>{{ penalty.created_by?.full_name || 'Неизвестно' }}</strong>
+            <span>{{ t('common.createdBy') }}</span>
+            <strong>{{ penalty.created_by?.full_name || t('common.unknown') }}</strong>
           </div>
 
           <div class="detail-item">
-            <span>Последняя отработка</span>
+            <span>{{ t('pages.penalty.lastRedemption') }}</span>
             <strong>{{ redemptionLabel(penalty.latest_redemption_status) }}</strong>
           </div>
         </div>
@@ -349,7 +359,7 @@ onMounted(fetchPenalties)
         </p>
 
         <div v-if="penalty.evidences.length" class="evidence-block">
-          <span class="section-label">Доказательства</span>
+          <span class="section-label">{{ t('pages.penalty.evidence') }}</span>
 
           <div class="evidence-list">
             <template v-for="evidence in penalty.evidences" :key="evidence.id">
@@ -373,11 +383,13 @@ onMounted(fetchPenalties)
         <div v-if="penalty.pending_redemption" class="redemption-card">
           <div class="redemption-head">
             <div>
-              <span class="section-label">Заявка на отработку</span>
+              <span class="section-label">{{ t('pages.penalty.redeemRequest') }}</span>
               <h3>{{ penalty.pending_redemption.event_type }}</h3>
             </div>
 
-            <span class="redemption-status">pending</span>
+            <span class="redemption-status">
+              {{ redemptionLabel(penalty.pending_redemption.status || 'pending') }}
+            </span>
           </div>
 
           <p class="redemption-description">
@@ -386,11 +398,11 @@ onMounted(fetchPenalties)
 
           <div class="redemption-meta">
             <span>
-              Студент:
-              {{ penalty.pending_redemption.user?.full_name || 'Неизвестно' }}
+              {{ t('pages.penalty.student') }}:
+              {{ penalty.pending_redemption.user?.full_name || t('common.unknown') }}
             </span>
             <span>
-              Отправлена:
+              {{ t('common.sentAt') }}:
               {{ formatDate(penalty.pending_redemption.created_at) }}
             </span>
           </div>
@@ -399,7 +411,7 @@ onMounted(fetchPenalties)
             v-if="penalty.pending_redemption.file_path"
             class="redemption-file"
           >
-            Файл:
+            {{ t('common.file') }}:
             <a
               v-if="isExternalLink(penalty.pending_redemption.file_path)"
               :href="penalty.pending_redemption.file_path"
@@ -419,8 +431,8 @@ onMounted(fetchPenalties)
             >
               {{
                 actionKey === `approve-${penalty.pending_redemption.id}`
-                  ? 'Сохранение...'
-                  : 'Одобрить'
+                  ? t('common.saving')
+                  : t('pages.penalty.approve')
               }}
             </button>
 
@@ -431,8 +443,8 @@ onMounted(fetchPenalties)
             >
               {{
                 actionKey === `reject-${penalty.pending_redemption.id}`
-                  ? 'Сохранение...'
-                  : 'Отклонить'
+                  ? t('common.saving')
+                  : t('pages.penalty.reject')
               }}
             </button>
           </div>
@@ -440,7 +452,7 @@ onMounted(fetchPenalties)
 
         <div class="footer-row">
           <span class="footer-note">
-            Email: {{ penalty.student?.email || 'Не указан' }}
+            {{ t('common.email') }}: {{ penalty.student?.email || t('common.notSpecified') }}
           </span>
 
           <button
@@ -449,7 +461,7 @@ onMounted(fetchPenalties)
             :disabled="actionKey === `cancel-${penalty.id}`"
             @click="cancelPenaltyItem(penalty)"
           >
-            {{ actionKey === `cancel-${penalty.id}` ? 'Отмена...' : 'Отменить штраф' }}
+            {{ actionKey === `cancel-${penalty.id}` ? t('pages.penalty.cancelling') : t('pages.penalty.cancelPenalty') }}
           </button>
         </div>
       </article>
