@@ -149,6 +149,11 @@ export const router = createRouter({
           component: () => import('@/roles/manager/pages/users/UsersPage.vue'),
         },
         {
+          path: 'penalties',
+          name: 'manager-penalties',
+          component: () => import('@/roles/dorm-admin/pages/penalty/Penalty.vue'),
+        },
+        {
           path: 'requests',
           name: 'manager-requests',
           component: () => import('@/roles/manager/pages/requests/RequestsPage.vue'),

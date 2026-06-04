@@ -50,6 +50,10 @@ const scoreText = computed(() => {
   return `${activePoints.value} / ${disciplineLimit.value}`
 })
 
+const disciplineLimitReached = computed(() =>
+  disciplineLimit.value > 0 && activePoints.value >= disciplineLimit.value
+)
+
 function formatPoints(value: number) {
   return value > 0
     ? `+${value} ${t('pages.penalty.point')}`
@@ -189,6 +193,13 @@ onMounted(() => {
             <button class="summary-btn" :disabled="!penalties.length">
               {{ t('pages.penalty.redeemPenalty') }}
             </button>
+          </div>
+
+          <div v-if="disciplineLimitReached" class="limit-warning">
+            <strong>{{ t('pages.penalty.limitReachedStudentTitle') }}</strong>
+            <span>
+              {{ t('pages.penalty.limitReachedStudentText', { score: scoreText }) }}
+            </span>
           </div>
 
           <div v-if="loading" class="state-box">
@@ -416,6 +427,27 @@ onMounted(() => {
 .summary-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.limit-warning {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #991b1b;
+}
+
+.limit-warning strong {
+  font-size: 15px;
+}
+
+.limit-warning span {
+  color: #b91c1c;
+  line-height: 1.45;
 }
 
 .penalty-list {

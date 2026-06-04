@@ -12,6 +12,7 @@ export interface PenaltyPerson {
   email: string
   uni_id: string
   role: string
+  discipline_limit?: number
 }
 
 export interface PenaltyRoom {
@@ -63,6 +64,11 @@ export interface ManagedPenalty {
   latest_redemption_status: string | null
   redemptions_count: number
   pending_redemptions_count: number
+  discipline?: {
+    active_points: number
+    discipline_limit: number
+    limit_reached: boolean
+  }
 }
 
 export interface PenaltyTarget {

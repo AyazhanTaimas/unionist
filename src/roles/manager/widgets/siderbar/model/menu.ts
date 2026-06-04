@@ -10,6 +10,7 @@ export const managerMenu: SidebarItem[] = [
   { labelKey: 'nav.news', route: '/manager/news', icon: HomeIcon },
   { labelKey: 'nav.notifications', route: '/manager/notifications', icon: BellIcon },
   { labelKey: 'nav.users', route: '/manager/users', icon: PenaltyIcon },
+  { labelKey: 'nav.penalty', route: '/manager/penalties', icon: PenaltyIcon },
   { labelKey: 'nav.liveRequests', route: '/manager/requests', icon: RequestIcon },
   { labelKey: 'nav.changeRoom', route: '/manager/requests/change-room', icon: RequestIcon },
 ]

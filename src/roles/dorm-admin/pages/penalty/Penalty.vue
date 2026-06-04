@@ -66,6 +66,23 @@ const stats = computed(() => ({
   ).length,
 }))
 
+const limitAlerts = computed(() => {
+  const seen = new Set<number>()
+
+  return penalties.value
+    .filter((penalty) => penalty.discipline?.limit_reached && penalty.student)
+    .filter((penalty) => {
+      const studentId = penalty.student?.id
+      if (!studentId || seen.has(studentId)) return false
+
+      seen.add(studentId)
+      return true
+    })
+})
+
+const disciplineScore = (penalty: ManagedPenalty) =>
+  `${penalty.discipline?.active_points ?? 0} / ${penalty.discipline?.discipline_limit ?? penalty.student?.discipline_limit ?? 0}`
+
 const fetchPenalties = async () => {
   loading.value = true
   error.value = null
@@ -152,6 +169,7 @@ const handleCreated = async (message: string) => {
   error.value = null
   showModal.value = false
   await fetchPenalties()
+  window.dispatchEvent(new Event('app:notifications-refresh'))
 }
 
 const cancelPenaltyItem = async (penalty: ManagedPenalty) => {
@@ -271,6 +289,25 @@ onMounted(fetchPenalties)
       </article>
     </div>
 
+    <div v-if="limitAlerts.length" class="limit-alerts">
+      <article
+        v-for="penalty in limitAlerts"
+        :key="penalty.student?.id"
+        class="limit-alert"
+      >
+        <strong>
+          {{ t('pages.penalty.limitReachedManagerTitle', {
+            name: penalty.student?.full_name || t('pages.penalty.studentMissing'),
+          }) }}
+        </strong>
+        <span>
+          {{ t('pages.penalty.limitReachedManagerText', {
+            score: disciplineScore(penalty),
+          }) }}
+        </span>
+      </article>
+    </div>
+
     <div v-if="notice" class="notice success">{{ notice }}</div>
     <div v-if="error" class="notice error">{{ error }}</div>
 
@@ -330,6 +367,12 @@ onMounted(fetchPenalties)
               <span v-if="penalty.student?.uni_id">• {{ penalty.student.uni_id }}</span>
             </div>
           </div>
+        </div>
+
+        <div v-if="penalty.discipline?.limit_reached" class="limit-badge">
+          {{ t('pages.penalty.limitReachedBadge', {
+            score: disciplineScore(penalty),
+          }) }}
         </div>
 
         <div class="details-grid">
@@ -600,6 +643,32 @@ h1 {
   line-height: 1;
 }
 
+.limit-alerts {
+  display: grid;
+  gap: 12px;
+}
+
+.limit-alert {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #991b1b;
+}
+
+.limit-alert strong {
+  font-size: 16px;
+}
+
+.limit-alert span {
+  color: #b91c1c;
+  line-height: 1.45;
+}
+
 .notice {
   padding: 14px 16px;
   border-radius: 16px;
@@ -735,6 +804,18 @@ h1 {
   margin-top: 6px;
   color: #68768b;
   line-height: 1.5;
+}
+
+.limit-badge {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 16px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .details-grid {
@@ -887,7 +968,8 @@ h1 {
   .card-head,
   .footer-row,
   .action-row,
-  .redemption-head {
+  .redemption-head,
+  .limit-alert {
     flex-direction: column;
   }
 
