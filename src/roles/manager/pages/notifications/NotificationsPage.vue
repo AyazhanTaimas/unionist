@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useI18n } from '@/app/i18n'
 import {
   createBroadcastNotification,
   getBroadcastNotifications,
   type BroadcastNotificationItem,
 } from '@/api/notifications'
 
+const { t, locale, dateLocale } = useI18n()
 const notifications = ref<BroadcastNotificationItem[]>([])
 const loading = ref(false)
 const submitting = ref(false)
@@ -23,9 +25,9 @@ const fetchNotifications = async () => {
 
   try {
     notifications.value = await getBroadcastNotifications()
-  } catch (requestError: any) {
-    error.value =
-      requestError?.response?.data?.message || 'Не удалось загрузить уведомления'
+  } catch (requestError) {
+    console.error(requestError)
+    error.value = t('pages.managerNotifications.loadError')
     notifications.value = []
   } finally {
     loading.value = false
@@ -44,7 +46,7 @@ const submit = async () => {
   error.value = null
 
   if (!form.value.title.trim() || !form.value.message.trim()) {
-    error.value = 'Заполните заголовок и текст уведомления'
+    error.value = t('pages.managerNotifications.validationError')
     return
   }
 
@@ -56,29 +58,25 @@ const submit = async () => {
       message: form.value.message.trim(),
     })
 
-    notice.value = 'Уведомление отправлено всем пользователям'
+    notice.value = t('pages.managerNotifications.submitSuccess')
     resetForm()
     await fetchNotifications()
     window.dispatchEvent(new Event('app:notifications-refresh'))
-  } catch (requestError: any) {
-    const responseData = requestError?.response?.data
-    error.value =
-      responseData?.errors?.message?.[0] ||
-      responseData?.errors?.title?.[0] ||
-      responseData?.message ||
-      'Не удалось отправить уведомление'
+  } catch (requestError) {
+    console.error(requestError)
+    error.value = t('pages.managerNotifications.submitError')
   } finally {
     submitting.value = false
   }
 }
 
 const formatDate = (value: string | null) => {
-  if (!value) return 'Дата неизвестна'
+  if (!value) return t('common.unknownDate')
 
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Дата неизвестна'
+  if (Number.isNaN(date.getTime())) return t('common.unknownDate')
 
-  return date.toLocaleString('ru-RU', {
+  return date.toLocaleString(dateLocale.value, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -87,75 +85,74 @@ const formatDate = (value: string | null) => {
   })
 }
 
-onMounted(fetchNotifications)
+watch(locale, fetchNotifications, { immediate: true })
 </script>
 
 <template>
   <section class="notifications-page">
     <div class="hero">
       <div>
-        <p class="eyebrow">Manager / Notifications</p>
-        <h1>Глобальные уведомления</h1>
+        <p class="eyebrow">{{ t('pages.managerNotifications.eyebrow') }}</p>
+        <h1>{{ t('pages.managerNotifications.title') }}</h1>
         <p class="subtitle">
-          Менеджер или администратор может отправить короткое уведомление, и оно
-          появится у всех пользователей в колокольчике.
+          {{ t('pages.managerNotifications.subtitle') }}
         </p>
       </div>
 
       <button class="refresh-btn" :disabled="loading" @click="fetchNotifications">
-        {{ loading ? 'Обновление...' : 'Обновить' }}
+        {{ loading ? t('common.refreshing') : t('common.refresh') }}
       </button>
     </div>
 
     <div class="content-grid">
       <div class="form-card">
-        <h2>Новое уведомление</h2>
+        <h2>{{ t('pages.managerNotifications.newTitle') }}</h2>
 
         <div v-if="notice" class="notice success">{{ notice }}</div>
         <div v-if="error" class="notice error">{{ error }}</div>
 
         <label class="field">
-          <span class="field-label">Заголовок</span>
+          <span class="field-label">{{ t('common.title') }}</span>
           <input
             v-model="form.title"
             class="field-input"
             type="text"
             maxlength="255"
-            placeholder="Например: Отключение воды"
+            :placeholder="t('pages.managerNotifications.titlePlaceholder')"
           />
         </label>
 
         <label class="field">
-          <span class="field-label">Текст уведомления</span>
+          <span class="field-label">{{ t('pages.managerNotifications.messageLabel') }}</span>
           <textarea
             v-model="form.message"
             class="field-input field-input--textarea"
             maxlength="5000"
-            placeholder="Напишите короткое уведомление для всех пользователей"
+            :placeholder="t('pages.managerNotifications.messagePlaceholder')"
           />
         </label>
 
         <button class="primary-btn" :disabled="submitting" @click="submit">
-          {{ submitting ? 'Отправка...' : 'Отправить всем' }}
+          {{ submitting ? t('common.sending') : t('pages.managerNotifications.sendAll') }}
         </button>
       </div>
 
       <div class="info-card">
-        <h2>Как это работает</h2>
+        <h2>{{ t('pages.managerNotifications.howItWorks') }}</h2>
         <ol class="steps-list">
-          <li>Менеджер или администратор отправляет уведомление.</li>
-          <li>Backend создаёт рассылку и записывает её каждому пользователю.</li>
-          <li>Все роли видят уведомление в колокольчике в верхней панели.</li>
+          <li>{{ t('pages.managerNotifications.step1') }}</li>
+          <li>{{ t('pages.managerNotifications.step2') }}</li>
+          <li>{{ t('pages.managerNotifications.step3') }}</li>
         </ol>
       </div>
     </div>
 
     <div v-if="loading && !notifications.length" class="state-card">
-      Загрузка уведомлений...
+      {{ t('pages.managerNotifications.loading') }}
     </div>
 
     <div v-else-if="!notifications.length" class="state-card">
-      Глобальные уведомления пока не отправлялись.
+      {{ t('pages.managerNotifications.empty') }}
     </div>
 
     <div v-else class="notification-list">
@@ -170,17 +167,17 @@ onMounted(fetchNotifications)
             <p class="notification-message">{{ item.message }}</p>
           </div>
 
-          <span class="notification-badge">Всем</span>
+          <span class="notification-badge">{{ t('pages.managerNotifications.audienceAll') }}</span>
         </div>
 
         <div class="meta-grid">
           <div class="meta-card">
-            <span class="meta-label">Отправил</span>
-            <span class="meta-value">{{ item.sender_name || 'Система' }}</span>
+            <span class="meta-label">{{ t('pages.managerNotifications.sender') }}</span>
+            <span class="meta-value">{{ item.sender_name || t('pages.managerNotifications.system') }}</span>
           </div>
 
           <div class="meta-card">
-            <span class="meta-label">Дата</span>
+            <span class="meta-label">{{ t('common.date') }}</span>
             <span class="meta-value">{{ formatDate(item.created_at) }}</span>
           </div>
         </div>
