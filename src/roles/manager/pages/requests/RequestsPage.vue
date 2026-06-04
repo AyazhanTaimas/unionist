@@ -11,7 +11,9 @@ import type {
   ManagerLiveRequest,
   ManagerRequestDocument,
 } from './types'
+import { useI18n } from '@/app/i18n'
 
+const { t, dateLocale } = useI18n()
 const requests = ref<ManagerLiveRequest[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -92,9 +94,9 @@ const fetchRequests = async () => {
     const loadedRequests = await getLiveRequests()
     requests.value = loadedRequests
     await syncLivingStatuses(loadedRequests)
-  } catch (requestError: any) {
-    error.value =
-      requestError?.response?.data?.message || 'Не удалось загрузить заявки'
+  } catch (requestError) {
+    console.error(requestError)
+    error.value = t('pages.managerRequests.loadError')
   } finally {
     loading.value = false
   }
@@ -103,7 +105,7 @@ const fetchRequests = async () => {
 const getFullName = (item: ManagerLiveRequest) => {
   const student = item.student
 
-  if (!student) return 'Студент не найден'
+  if (!student) return t('pages.managerRequests.studentMissing')
 
   return [
     student.lastname,
@@ -111,7 +113,7 @@ const getFullName = (item: ManagerLiveRequest) => {
     student.middlename,
   ]
     .filter(Boolean)
-    .join(' ') || student.email || `Студент #${student.id}`
+    .join(' ') || student.email || t('pages.managerRequests.studentWithId', { id: student.id })
 }
 
 const getRoomLabel = (item: ManagerLiveRequest) => {
@@ -119,12 +121,12 @@ const getRoomLabel = (item: ManagerLiveRequest) => {
   const floor = room?.floor
   const building = floor?.building
 
-  if (!room) return 'Комната не выбрана'
+  if (!room) return t('pages.managerRequests.noRoom')
 
-  const parts = [`Комната ${room.room_number || room.id}`]
+  const parts = [t('pages.managerRequests.roomLabel', { room: room.room_number || room.id })]
 
   if (floor?.floor_number != null) {
-    parts.push(`${floor.floor_number} этаж`)
+    parts.push(t('pages.managerRequests.floorLabel', { floor: floor.floor_number }))
   }
 
   if (building?.name) {
@@ -135,11 +137,11 @@ const getRoomLabel = (item: ManagerLiveRequest) => {
 }
 
 const getStatusLabel = (item: ManagerLiveRequest) => {
-  if (item.status === 'pending' && isStudentLiving(item)) return 'Уже заселен'
+  if (item.status === 'pending' && isStudentLiving(item)) return t('pages.managerRequests.alreadySettled')
   const status = item.status
-  if (status === 'pending') return 'На рассмотрении'
-  if (status === 'accepted') return 'Принята'
-  if (status === 'rejected') return 'Отклонена'
+  if (status === 'pending') return t('common.pending')
+  if (status === 'accepted') return t('common.accepted')
+  if (status === 'rejected') return t('common.rejected')
   return status
 }
 
@@ -159,12 +161,14 @@ const getStatusClass = (item: ManagerLiveRequest) => {
 const isActing = (id: number, type: 'approve' | 'reject') =>
   actionRequestId.value === id && actionType.value === type
 
-const formatDate = (value: string) => {
+const formatDate = (value: string | null) => {
+  if (!value) return t('common.unknownDate')
+
   const date = new Date(value)
 
-  if (Number.isNaN(date.getTime())) return 'Дата неизвестна'
+  if (Number.isNaN(date.getTime())) return t('common.unknownDate')
 
-  return date.toLocaleString('ru-RU', {
+  return date.toLocaleString(dateLocale.value, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -187,8 +191,8 @@ const getDocumentUrl = (document: ManagerRequestDocument) => {
 
 const emptyStateText = computed(() =>
   activeTab.value === 'pending'
-    ? 'Сейчас нет заявок, которые ждут решения менеджера.'
-    : 'История пока пустая. Обработанные заявки появятся здесь.'
+    ? t('pages.managerRequests.pendingEmpty')
+    : t('pages.managerRequests.historyEmpty')
 )
 
 const processRequest = async (
@@ -200,8 +204,8 @@ const processRequest = async (
   const isApprove = type === 'approve'
   const confirmed = confirm(
     isApprove
-      ? `Принять заявку студента ${getFullName(item)}?`
-      : `Отклонить заявку студента ${getFullName(item)}?`
+      ? t('pages.managerRequests.acceptConfirm', { name: getFullName(item) })
+      : t('pages.managerRequests.rejectConfirm', { name: getFullName(item) })
   )
 
   if (!confirmed) return
@@ -213,19 +217,19 @@ const processRequest = async (
   try {
     if (isApprove) {
       await approveLiveRequest(item.id)
-      notice.value = 'Заявка успешно принята'
+      notice.value = t('pages.managerRequests.acceptSuccess')
     } else {
       await rejectLiveRequest(item.id)
-      notice.value = 'Заявка успешно отклонена'
+      notice.value = t('pages.managerRequests.rejectSuccess')
     }
 
     await fetchRequests()
-  } catch (requestError: any) {
+  } catch (requestError) {
+    console.error(requestError)
     alert(
-      requestError?.response?.data?.message ||
-        (isApprove
-          ? 'Не удалось принять заявку'
-          : 'Не удалось отклонить заявку')
+      isApprove
+        ? t('pages.managerRequests.acceptError')
+        : t('pages.managerRequests.rejectError')
     )
   } finally {
     actionRequestId.value = null
@@ -240,38 +244,36 @@ onMounted(fetchRequests)
   <section class="requests-page">
     <div class="hero">
       <div>
-        <p class="eyebrow">Manager / Requests</p>
-        <h1>Заявки на проживание</h1>
+        <p class="eyebrow">{{ t('pages.managerRequests.eyebrow') }}</p>
+        <h1>{{ t('pages.managerRequests.title') }}</h1>
         <p class="subtitle">
-          Переключайтесь между новыми заявками и уже обработанной историей в
-          одном окне. Если студент уже заселен, заявка автоматически считается
-          неактуальной и переносится в историю.
+          {{ t('pages.managerRequests.subtitle') }}
         </p>
       </div>
 
       <button class="refresh-btn" :disabled="loading" @click="fetchRequests">
-        {{ loading ? 'Обновление...' : 'Обновить' }}
+        {{ loading ? t('common.refreshing') : t('common.refresh') }}
       </button>
     </div>
 
     <div class="stats">
       <article class="stat-card">
-        <span class="stat-label">Всего</span>
+        <span class="stat-label">{{ t('common.total') }}</span>
         <strong>{{ requests.length }}</strong>
       </article>
 
       <article class="stat-card">
-        <span class="stat-label">На рассмотрении</span>
+        <span class="stat-label">{{ t('common.pending') }}</span>
         <strong>{{ pendingCount }}</strong>
       </article>
 
       <article class="stat-card">
-        <span class="stat-label">Принято</span>
+        <span class="stat-label">{{ t('common.accepted') }}</span>
         <strong>{{ acceptedCount }}</strong>
       </article>
 
       <article class="stat-card">
-        <span class="stat-label">Отклонено</span>
+        <span class="stat-label">{{ t('common.rejected') }}</span>
         <strong>{{ rejectedCount }}</strong>
       </article>
     </div>
@@ -285,7 +287,7 @@ onMounted(fetchRequests)
         :class="{ active: activeTab === 'pending' }"
         @click="activeTab = 'pending'"
       >
-        На рассмотрении
+        {{ t('common.pending') }}
         <span class="tab-count">{{ pendingCount }}</span>
       </button>
 
@@ -294,12 +296,14 @@ onMounted(fetchRequests)
         :class="{ active: activeTab === 'history' }"
         @click="activeTab = 'history'"
       >
-        История
+        {{ t('common.history') }}
         <span class="tab-count">{{ historyCount }}</span>
       </button>
     </div>
 
-    <div v-if="loading && !requests.length" class="state-card">Загрузка заявок...</div>
+    <div v-if="loading && !requests.length" class="state-card">
+      {{ t('pages.managerRequests.loading') }}
+    </div>
 
     <div v-else-if="!filteredRequests.length" class="state-card">
       {{ emptyStateText }}
@@ -315,9 +319,9 @@ onMounted(fetchRequests)
           <div>
             <h2>{{ getFullName(item) }}</h2>
             <p class="meta-row">
-              {{ item.student?.uni_id || 'Без ID' }}
+              {{ item.student?.uni_id || t('common.noId') }}
               <span class="dot">•</span>
-              {{ item.student?.email || 'Без email' }}
+              {{ item.student?.email || t('common.noEmail') }}
             </p>
           </div>
 
@@ -327,37 +331,37 @@ onMounted(fetchRequests)
         </div>
 
         <div v-if="item.status === 'pending' && isStudentLiving(item)" class="stale-note">
-          У студента уже есть активное заселение. Повторное принятие заявки не требуется.
+          {{ t('pages.managerRequests.staleNote') }}
         </div>
 
         <div class="details-grid">
           <div class="detail-card">
-            <span class="detail-label">Телефон</span>
+            <span class="detail-label">{{ t('common.phone') }}</span>
             <span class="detail-value">
-              {{ item.student?.phone_number || 'Не указан' }}
+              {{ item.student?.phone_number || t('common.notSpecified') }}
             </span>
           </div>
 
           <div class="detail-card">
-            <span class="detail-label">Комната</span>
+            <span class="detail-label">{{ t('common.room') }}</span>
             <span class="detail-value">{{ getRoomLabel(item) }}</span>
           </div>
 
           <div class="detail-card">
-            <span class="detail-label">Адрес</span>
+            <span class="detail-label">{{ t('common.address') }}</span>
             <span class="detail-value">
-              {{ item.preferred_room?.floor?.building?.address || 'Не указан' }}
+              {{ item.preferred_room?.floor?.building?.address || t('common.notSpecified') }}
             </span>
           </div>
 
           <div class="detail-card">
-            <span class="detail-label">Отправлена</span>
+            <span class="detail-label">{{ t('common.sentAt') }}</span>
             <span class="detail-value">{{ formatDate(item.created_at) }}</span>
           </div>
         </div>
 
         <div v-if="item.documents.length" class="documents">
-          <span class="section-label">Документы</span>
+          <span class="section-label">{{ t('common.documents') }}</span>
 
           <div class="document-list">
             <a
@@ -379,7 +383,7 @@ onMounted(fetchRequests)
             :disabled="actionRequestId === item.id"
             @click="processRequest(item, 'approve')"
           >
-            {{ isActing(item.id, 'approve') ? 'Принятие...' : 'Принять' }}
+            {{ isActing(item.id, 'approve') ? t('pages.managerRequests.accepting') : t('pages.managerRequests.acceptAction') }}
           </button>
 
           <button
@@ -387,7 +391,7 @@ onMounted(fetchRequests)
             :disabled="actionRequestId === item.id"
             @click="processRequest(item, 'reject')"
           >
-            {{ isActing(item.id, 'reject') ? 'Отклонение...' : 'Отклонить' }}
+            {{ isActing(item.id, 'reject') ? t('pages.managerRequests.rejecting') : t('pages.managerRequests.rejectAction') }}
           </button>
         </div>
       </article>
