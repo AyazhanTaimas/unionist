@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import {
   getInboxNotifications,
   markAllInboxNotificationsRead,
@@ -18,7 +18,7 @@ import LanguageSwitcher from '@/app/i18n/LanguageSwitcher.vue'
 import { getDateLocale, useI18n } from '@/app/i18n'
 
 const router = useRouter()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const notifications = ref<InboxNotificationItem[]>([])
 const unreadCount = ref(0)
 const loadingNotifications = ref(false)
@@ -142,6 +142,10 @@ const handleDocumentClick = (event: MouseEvent) => {
 const handleNotificationsRefresh = () => {
   void fetchNotifications()
 }
+
+watch(locale, () => {
+  void fetchNotifications()
+})
 
 async function logout() {
   try {

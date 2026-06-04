@@ -1,22 +1,33 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from '@/app/i18n'
 import {
   createBroadcastNotification,
   getBroadcastNotifications,
   type BroadcastNotificationItem,
+  type NotificationLocale,
 } from '@/api/notifications'
 
 const { t, locale, dateLocale } = useI18n()
+const locales: Array<{ code: NotificationLocale; label: string }> = [
+  { code: 'ru', label: 'RU' },
+  { code: 'kk', label: 'KZ' },
+  { code: 'en', label: 'EN' },
+]
 const notifications = ref<BroadcastNotificationItem[]>([])
 const loading = ref(false)
 const submitting = ref(false)
 const error = ref<string | null>(null)
 const notice = ref<string | null>(null)
+const activeLocale = ref<NotificationLocale>('ru')
+const activeLocaleLabel = computed(
+  () => locales.find((item) => item.code === activeLocale.value)?.label || activeLocale.value.toUpperCase()
+)
 
-const form = ref({
-  title: '',
-  message: '',
+const form = ref<Record<NotificationLocale, { title: string; message: string }>>({
+  ru: { title: '', message: '' },
+  kk: { title: '', message: '' },
+  en: { title: '', message: '' },
 })
 
 const fetchNotifications = async () => {
@@ -36,17 +47,26 @@ const fetchNotifications = async () => {
 
 const resetForm = () => {
   form.value = {
-    title: '',
-    message: '',
+    ru: { title: '', message: '' },
+    kk: { title: '', message: '' },
+    en: { title: '', message: '' },
   }
+  activeLocale.value = 'ru'
 }
 
 const submit = async () => {
   notice.value = null
   error.value = null
 
-  if (!form.value.title.trim() || !form.value.message.trim()) {
-    error.value = t('pages.managerNotifications.validationError')
+  const emptyLocale = locales.find(
+    (item) =>
+      !form.value[item.code].title.trim() ||
+      !form.value[item.code].message.trim()
+  )
+
+  if (emptyLocale) {
+    activeLocale.value = emptyLocale.code
+    error.value = t('pages.managerNotifications.validationError', { locale: emptyLocale.label })
     return
   }
 
@@ -54,8 +74,18 @@ const submit = async () => {
 
   try {
     await createBroadcastNotification({
-      title: form.value.title.trim(),
-      message: form.value.message.trim(),
+      title: form.value.ru.title.trim(),
+      message: form.value.ru.message.trim(),
+      translations: {
+        kk: {
+          title: form.value.kk.title.trim(),
+          message: form.value.kk.message.trim(),
+        },
+        en: {
+          title: form.value.en.title.trim(),
+          message: form.value.en.message.trim(),
+        },
+      },
     })
 
     notice.value = t('pages.managerNotifications.submitSuccess')
@@ -111,26 +141,43 @@ watch(locale, fetchNotifications, { immediate: true })
         <div v-if="notice" class="notice success">{{ notice }}</div>
         <div v-if="error" class="notice error">{{ error }}</div>
 
-        <label class="field">
-          <span class="field-label">{{ t('common.title') }}</span>
-          <input
-            v-model="form.title"
-            class="field-input"
-            type="text"
-            maxlength="255"
-            :placeholder="t('pages.managerNotifications.titlePlaceholder')"
-          />
-        </label>
+        <div class="language-tabs">
+          <button
+            v-for="item in locales"
+            :key="item.code"
+            type="button"
+            class="language-tab"
+            :class="{ active: activeLocale === item.code }"
+            @click="activeLocale = item.code"
+          >
+            {{ item.label }}
+          </button>
+        </div>
 
-        <label class="field">
-          <span class="field-label">{{ t('pages.managerNotifications.messageLabel') }}</span>
-          <textarea
-            v-model="form.message"
-            class="field-input field-input--textarea"
-            maxlength="5000"
-            :placeholder="t('pages.managerNotifications.messagePlaceholder')"
-          />
-        </label>
+        <div class="language-panel">
+          <label class="field">
+            <span class="field-label">{{ t('common.title') }} {{ activeLocaleLabel }}</span>
+            <input
+              v-model="form[activeLocale].title"
+              class="field-input"
+              type="text"
+              maxlength="255"
+              :placeholder="t('pages.managerNotifications.titlePlaceholder')"
+            />
+          </label>
+
+          <label class="field">
+            <span class="field-label">
+              {{ t('pages.managerNotifications.messageLabel') }} {{ activeLocaleLabel }}
+            </span>
+            <textarea
+              v-model="form[activeLocale].message"
+              class="field-input field-input--textarea"
+              maxlength="5000"
+              :placeholder="t('pages.managerNotifications.messagePlaceholder')"
+            />
+          </label>
+        </div>
 
         <button class="primary-btn" :disabled="submitting" @click="submit">
           {{ submitting ? t('common.sending') : t('pages.managerNotifications.sendAll') }}
@@ -304,6 +351,35 @@ h1 {
   margin-top: 16px;
 }
 
+.language-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.language-tab {
+  min-height: 42px;
+  border: 1px solid #dbe5f0;
+  border-radius: 14px;
+  background: #f8fbff;
+  color: #526075;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.language-tab.active {
+  border-color: #2563eb;
+  background: #eef4ff;
+  color: #2563eb;
+}
+
+.language-panel {
+  display: flex;
+  flex-direction: column;
+}
+
 .field-label,
 .meta-label {
   display: block;
@@ -463,6 +539,11 @@ h1 {
 
   .notification-list {
     gap: 12px;
+  }
+
+  .language-tab {
+    min-height: 38px;
+    border-radius: 12px;
   }
 }
 </style>

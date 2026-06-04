@@ -6,10 +6,22 @@ interface ApiEnvelope<T> {
   data: T
 }
 
+export type NotificationLocale = 'ru' | 'kk' | 'en'
+
+export interface NotificationTranslation {
+  title: string
+  message: string
+}
+
+export type NotificationTranslations = Partial<Record<NotificationLocale, NotificationTranslation>>
+
 export interface InboxNotificationItem {
   id: string
   title: string
   message: string
+  title_ru?: string
+  message_ru?: string
+  translations?: NotificationTranslations | null
   action_url: string | null
   sender_name: string | null
   broadcast_id: number | null
@@ -26,6 +38,9 @@ export interface BroadcastNotificationItem {
   id: number
   title: string
   message: string
+  title_ru?: string
+  message_ru?: string
+  translations?: NotificationTranslations | null
   action_url: string | null
   created_at: string | null
   updated_at: string | null
@@ -36,6 +51,10 @@ export interface BroadcastNotificationItem {
 export interface CreateBroadcastNotificationPayload {
   title: string
   message: string
+  translations: {
+    kk: NotificationTranslation
+    en: NotificationTranslation
+  }
   action_url?: string | null
 }
 
