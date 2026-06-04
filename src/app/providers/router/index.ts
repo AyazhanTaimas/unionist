@@ -180,6 +180,11 @@ export const router = createRouter({
           component: () => import('@/roles/employee/pages/news/NewsPage.vue'),
         },
         {
+          path: 'students',
+          name: 'employee-students',
+          component: () => import('@/roles/employee/pages/students/StudentsPage.vue'),
+        },
+        {
           path: 'penalties',
           redirect: '/employee/news',
         },
